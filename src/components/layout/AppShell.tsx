@@ -160,17 +160,23 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuContent align="end" className="w-72">
                   <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="flex-col items-start gap-1">
-                    <div className="font-medium">New registration</div>
-                    <div className="text-xs text-muted-foreground">A new student joined today.</div>
+                  <DropdownMenuItem asChild className="flex-col items-start gap-1 cursor-pointer">
+                    <Link to="/students">
+                      <div className="font-medium">New registration</div>
+                      <div className="text-xs text-muted-foreground">A new student joined today.</div>
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex-col items-start gap-1">
-                    <div className="font-medium">Fee reminder</div>
-                    <div className="text-xs text-muted-foreground">3 students have pending fees.</div>
+                  <DropdownMenuItem asChild className="flex-col items-start gap-1 cursor-pointer">
+                    <Link to="/fees">
+                      <div className="font-medium">Fee reminder</div>
+                      <div className="text-xs text-muted-foreground">3 students have pending fees.</div>
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex-col items-start gap-1">
-                    <div className="font-medium">Attendance below 75%</div>
-                    <div className="text-xs text-muted-foreground">2 students need attention.</div>
+                  <DropdownMenuItem asChild className="flex-col items-start gap-1 cursor-pointer">
+                    <Link to="/reports">
+                      <div className="font-medium">Attendance below 75%</div>
+                      <div className="text-xs text-muted-foreground">2 students need attention.</div>
+                    </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
