@@ -39,6 +39,24 @@ function extIcon(ext: string) {
   return <FileText className="h-6 w-6" />;
 }
 
+function dataUrlToBlobUrl(dataUrl: string): string {
+  try {
+    const parts = dataUrl.split(",");
+    const mime = parts[0].match(/:(.*?);/)?.[1] || "";
+    const bstr = atob(parts[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    const blob = new Blob([u8arr], { type: mime });
+    return URL.createObjectURL(blob);
+  } catch (e) {
+    console.error("Failed to convert dataURL to BlobURL:", e);
+    return dataUrl;
+  }
+}
+
 function MaterialsPage() {
   useHydrated();
   const [materials, setMaterialsState] = useMaterials();
@@ -46,7 +64,24 @@ function MaterialsPage() {
   const [type, setType] = useState<string>("all");
   const [q, setQ] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [previewMaterial, setPreviewMaterial] = useState<typeof materials[0] | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const handlePreview = (m: typeof materials[0]) => {
+    if (!m.dataUrl) return;
+    const url = dataUrlToBlobUrl(m.dataUrl);
+    setPreviewUrl(url);
+    setPreviewMaterial(m);
+  };
+
+  const handleClosePreview = () => {
+    if (previewUrl && previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setPreviewMaterial(null);
+  };
+
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<{ title: string; type: MaterialType; file: File | null }>({
     title: "",
@@ -186,7 +221,7 @@ function MaterialsPage() {
                 </div>
               </div>
               <div className="mt-auto flex gap-1">
-                <Button size="sm" variant="outline" className="flex-1 rounded-lg" onClick={() => setPreview(m.dataUrl ?? null)} disabled={!m.dataUrl}>
+                <Button size="sm" variant="outline" className="flex-1 rounded-lg" onClick={() => handlePreview(m)} disabled={!m.dataUrl}>
                   <Eye className="mr-1 h-3.5 w-3.5" /> Preview
                 </Button>
                 <Button size="sm" variant="outline" className="flex-1 rounded-lg" onClick={() => download(m.id)}>
@@ -246,16 +281,18 @@ function MaterialsPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
+      <Dialog open={!!previewUrl} onOpenChange={(o) => !o && handleClosePreview()}>
         <DialogContent className="max-w-3xl">
-          <DialogHeader><DialogTitle>Preview</DialogTitle></DialogHeader>
-          {preview && (
-            preview.startsWith("data:image") ? (
-              <img src={preview} alt="preview" className="max-h-[70vh] w-full rounded-xl object-contain" />
-            ) : preview.startsWith("data:video") ? (
-              <video src={preview} controls className="max-h-[70vh] w-full rounded-xl" />
-            ) : preview.startsWith("data:application/pdf") ? (
-              <iframe src={preview} title="pdf" className="h-[70vh] w-full rounded-xl" />
+          <DialogHeader>
+            <DialogTitle>Preview - {previewMaterial?.title}</DialogTitle>
+          </DialogHeader>
+          {previewUrl && previewMaterial && (
+            previewMaterial.fileType && ["jpg", "jpeg", "png", "gif", "webp"].includes(previewMaterial.fileType.toLowerCase()) ? (
+              <img src={previewUrl} alt="preview" className="max-h-[70vh] w-full rounded-xl object-contain" />
+            ) : previewMaterial.fileType && ["mp4", "mov", "webm"].includes(previewMaterial.fileType.toLowerCase()) ? (
+              <video src={previewUrl} controls className="max-h-[70vh] w-full rounded-xl" />
+            ) : previewMaterial.fileType && previewMaterial.fileType.toLowerCase() === "pdf" ? (
+              <iframe src={previewUrl} title="pdf" className="h-[70vh] w-full rounded-xl" />
             ) : (
               <div className="p-6 text-center text-muted-foreground">Preview not available for this file type.</div>
             )

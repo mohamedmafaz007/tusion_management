@@ -10,8 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/StatCard";
 import { AttendanceStatusBadge, FeeStatusBadge } from "@/components/StatusBadges";
 import { useAttendance, useFees, useHydrated, useMaterials, useStudents } from "@/lib/hooks";
-import { formatCurrency, initials, studentAttendancePct, studentAvatarStyle, studentFeeStatus } from "@/lib/derive";
+import { formatCurrency, initials, studentAttendancePct, studentAvatarStyle, studentFeeStatus, currentMonthKey } from "@/lib/derive";
 import { toast } from "sonner";
+import { uid } from "@/lib/storage";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,7 +40,7 @@ function StudentProfilePage() {
   const hydrated = useHydrated();
   const [students, setStudentsState] = useStudents();
   const [attendance] = useAttendance();
-  const [fees] = useFees();
+  const [fees, setFeesState] = useFees();
   const [materials] = useMaterials();
   const navigate = useNavigate();
   const [edit, setEdit] = useState(false);
@@ -47,6 +48,7 @@ function StudentProfilePage() {
 
   const student = students.find((s) => s.id === id);
   const [draft, setDraft] = useState(student);
+  const [draftPending, setDraftPending] = useState(0);
 
   const recent = useMemo(
     () =>
@@ -76,6 +78,62 @@ function StudentProfilePage() {
   const save = () => {
     if (!draft) return;
     setStudentsState(students.map((s) => (s.id === id ? draft : s)));
+
+    // Update pending fees
+    const newPending = Math.max(0, draftPending);
+    const currentMonth = currentMonthKey();
+
+    let studentFees = fees.filter((f) => f.studentId === id);
+    const otherFees = fees.filter((f) => f.studentId !== id);
+
+    const hasCurrentMonth = studentFees.some((f) => f.month === currentMonth);
+    if (!hasCurrentMonth) {
+      studentFees.push({
+        id: uid(),
+        studentId: id,
+        month: currentMonth,
+        amount: draft.monthlyFees,
+        paidAmount: 0,
+        status: "Pending",
+      });
+    }
+
+    // Sort student fees descending (newest month first)
+    studentFees.sort((a, b) => b.month.localeCompare(a.month));
+
+    let remainingPending = newPending;
+    studentFees = studentFees.map((f) => {
+      const allocatedPending = Math.min(remainingPending, f.amount);
+      const paidAmount = f.amount - allocatedPending;
+      remainingPending -= allocatedPending;
+
+      let status: typeof f.status = "Pending";
+      if (allocatedPending === 0) {
+        status = "Paid";
+      } else if (allocatedPending === f.amount) {
+        status = "Pending";
+      } else {
+        status = "Partial";
+      }
+
+      const paidDate = status === "Paid" ? (f.paidDate || new Date().toISOString().slice(0, 10)) : undefined;
+
+      return {
+        ...f,
+        paidAmount,
+        status,
+        paidDate,
+      };
+    });
+
+    if (remainingPending > 0 && studentFees.length > 0) {
+      studentFees[0].amount += remainingPending;
+      studentFees[0].paidAmount = 0;
+      studentFees[0].status = "Pending";
+      studentFees[0].paidDate = undefined;
+    }
+
+    setFeesState([...otherFees, ...studentFees]);
     toast.success("Student updated");
     setEdit(false);
   };
@@ -124,7 +182,7 @@ function StudentProfilePage() {
           <div className="flex flex-wrap items-start gap-2 pt-4">
             {!edit ? (
               <>
-                <Button variant="outline" className="rounded-xl" onClick={() => { setDraft(student); setEdit(true); }}>
+                <Button variant="outline" className="rounded-xl" onClick={() => { setDraft(student); setDraftPending(fs.pending); setEdit(true); }}>
                   <Pencil className="mr-2 h-4 w-4" /> Edit
                 </Button>
                 <Button variant="outline" className="rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setConfirmDel(true)}>
@@ -164,6 +222,7 @@ function StudentProfilePage() {
             <Fld label="Mother Mobile"><Input value={draft.motherMobile} onChange={(e) => setDraft({ ...draft, motherMobile: e.target.value })} /></Fld>
             <Fld label="Monthly Fee"><Input type="number" value={draft.monthlyFees} onChange={(e) => setDraft({ ...draft, monthlyFees: +e.target.value })} /></Fld>
             <Fld label="Admission Fee"><Input type="number" value={draft.admissionFees} onChange={(e) => setDraft({ ...draft, admissionFees: +e.target.value })} /></Fld>
+            <Fld label="Pending Fee"><Input type="number" value={draftPending} onChange={(e) => setDraftPending(+e.target.value)} /></Fld>
             <div className="md:col-span-2"><Fld label="Address"><Textarea rows={2} value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} /></Fld></div>
             <div className="md:col-span-2"><Fld label="Notes"><Textarea rows={2} value={draft.notes ?? ""} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Fld></div>
           </div>
