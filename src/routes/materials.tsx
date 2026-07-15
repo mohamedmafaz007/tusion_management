@@ -106,7 +106,7 @@ function extractDriveFileId(url: string): string | null {
 }
 
 function MaterialsPage() {
-  useHydrated();
+  const hydrated = useHydrated();
   const [materials, setMaterialsState] = useMaterials();
   const [standard, setStandard] = useState<Standard>("6th");
   const [type, setType] = useState<string>("all");
@@ -350,6 +350,32 @@ function MaterialsPage() {
     a.click();
     toast.success("Download started");
   };
+
+  if (!hydrated) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Study Materials"
+          description="Organize notes, papers, and worksheets by standard."
+          actions={
+            <Button className="rounded-xl gradient-brand shadow-glow" disabled>
+              <Upload className="mr-2 h-4 w-4" /> Upload Material
+            </Button>
+          }
+        />
+        {/* Loading skeletons for standard folders */}
+        <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 animate-pulse">
+          {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div key={i} className="glass flex flex-col items-center gap-2 rounded-2xl p-4">
+              <div className="h-8 w-8 rounded-full bg-muted/30" />
+              <div className="h-4 w-12 rounded bg-muted/30" />
+              <div className="h-3 w-16 rounded bg-muted/30" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
