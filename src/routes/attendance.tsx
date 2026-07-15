@@ -99,9 +99,11 @@ function AttendancePage() {
       const loadingToast = toast.loading(`Sending automated WhatsApp alert to ${s.name}'s parent...`);
       try {
         const res = await sendWhatsAppAlert({
-          recipientPhone: parentMobile,
-          studentName: s.name,
-          status: status
+          data: {
+            recipientPhone: parentMobile,
+            studentName: s.name,
+            status: status
+          }
         });
         if (res.success) {
           toast.success(`WhatsApp alert sent successfully!`, { id: loadingToast });
