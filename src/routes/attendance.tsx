@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { StatCard } from "@/components/StatCard";
 import { AttendanceStatusBadge } from "@/components/StatusBadges";
-import { useAttendance, useHydrated, useStudents } from "@/lib/hooks";
+import { useAttendance, useHydrated, useStudents, useSettings } from "@/lib/hooks";
 import { STANDARDS, type AttendanceStatus } from "@/lib/types";
 import { uid } from "@/lib/storage";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,13 @@ import { toast } from "sonner";
 import { initials, studentAvatarStyle } from "@/lib/derive";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { sendWhatsAppAlert } from "@/lib/db";
+
+const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.455 5.703 1.456h.004c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+);
 
 export const Route = createFileRoute("/attendance")({
   head: () => ({
@@ -41,6 +48,7 @@ function AttendancePage() {
   const hydrated = useHydrated();
   const [students] = useStudents();
   const [attendance, setAttendanceState] = useAttendance();
+  const [settings] = useSettings();
   const [standard, setStandard] = useState<string>("all");
   const [date, setDate] = useState<Date>(new Date());
   const [remarks, setRemarks] = useState<Record<string, string>>({});
@@ -64,6 +72,46 @@ function AttendancePage() {
       ...others,
       { id: uid(), studentId: sid, date: dateKey, status, remarks: remarks[sid] },
     ]);
+  };
+
+  const handleSendWhatsApp = async (s: typeof students[0], status: AttendanceStatus) => {
+    const template = status === "Present"
+      ? settings.whatsappTemplatePresent
+      : settings.whatsappTemplateAbsent;
+      
+    const messageText = (template || `Dear Parent, your child [student_name] was marked ${status} today.`).replace("[student_name]", s.name);
+
+    const parentMobile = s.fatherMobile || s.motherMobile;
+    if (!parentMobile) {
+      toast.error("No registered parent mobile number found for this student.");
+      return;
+    }
+
+    const provider = settings.whatsappProvider || "manual";
+
+    if (provider === "manual") {
+      let phone = parentMobile.replace(/[\s\-\(\)\+]/g, "");
+      if (phone.length === 10) phone = "91" + phone;
+      const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
+      window.open(url, "_blank");
+      toast.success("Opening WhatsApp chat link...");
+    } else {
+      const loadingToast = toast.loading(`Sending automated WhatsApp alert to ${s.name}'s parent...`);
+      try {
+        const res = await sendWhatsAppAlert({
+          recipientPhone: parentMobile,
+          studentName: s.name,
+          status: status
+        });
+        if (res.success) {
+          toast.success(`WhatsApp alert sent successfully!`, { id: loadingToast });
+        } else {
+          toast.error("Failed to send WhatsApp alert.", { id: loadingToast });
+        }
+      } catch (err: any) {
+        toast.error(`Error: ${err.message || err}`, { id: loadingToast });
+      }
+    }
   };
 
   const markAll = (status: AttendanceStatus) => {
@@ -207,6 +255,18 @@ function AttendancePage() {
                     onChange={(e) => setRemarks({ ...remarks, [s.id]: e.target.value })}
                   />
                   {st && <AttendanceStatusBadge status={st} />}
+                  
+                  {st && (st === "Present" || st === "Absent") && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleSendWhatsApp(s, st)}
+                      className="h-9 w-9 shrink-0 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                      title="Send WhatsApp Alert to Parent"
+                    >
+                      <WhatsAppIcon className="h-5 w-5" />
+                    </Button>
+                  )}
                 </div>
               </li>
             );

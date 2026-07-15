@@ -87,4 +87,10 @@ export interface AppSettings {
   theme: "light" | "dark";
   notifications: boolean;
   language: "English" | "Hindi" | "Tamil";
+  whatsappProvider?: "manual" | "twilio" | "ultramsg";
+  whatsappApiKey?: string;
+  whatsappInstanceId?: string;
+  whatsappSenderNumber?: string;
+  whatsappTemplatePresent?: string;
+  whatsappTemplateAbsent?: string;
 }

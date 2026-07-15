@@ -95,6 +95,92 @@ function SettingsPage() {
           </div>
         </div>
 
+        <div className="glass rounded-2xl p-6 lg:col-span-2">
+          <h3 className="mb-4 font-semibold">WhatsApp Automation Settings</h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Fld label="WhatsApp Provider">
+              <Select
+                value={draft.whatsappProvider || "manual"}
+                onValueChange={(v) => setDraft({ ...draft, whatsappProvider: v as any })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">WhatsApp Redirect wa.me Link (Free, Manual)</SelectItem>
+                  <SelectItem value="ultramsg">UltraMsg Gateway API (Automated)</SelectItem>
+                  <SelectItem value="twilio">Twilio WhatsApp Business API (Automated)</SelectItem>
+                </SelectContent>
+              </Select>
+            </Fld>
+
+            {draft.whatsappProvider === "ultramsg" && (
+              <>
+                <Fld label="UltraMsg Instance ID">
+                  <Input
+                    placeholder="e.g. instance12345"
+                    value={draft.whatsappInstanceId || ""}
+                    onChange={(e) => setDraft({ ...draft, whatsappInstanceId: e.target.value })}
+                  />
+                </Fld>
+                <Fld label="UltraMsg API Token">
+                  <Input
+                    placeholder="Enter your UltraMsg Token"
+                    value={draft.whatsappApiKey || ""}
+                    onChange={(e) => setDraft({ ...draft, whatsappApiKey: e.target.value })}
+                  />
+                </Fld>
+              </>
+            )}
+
+            {draft.whatsappProvider === "twilio" && (
+              <>
+                <Fld label="Twilio Account SID">
+                  <Input
+                    placeholder="Enter Twilio Account SID"
+                    value={draft.whatsappInstanceId || ""}
+                    onChange={(e) => setDraft({ ...draft, whatsappInstanceId: e.target.value })}
+                  />
+                </Fld>
+                <Fld label="Twilio Auth Token">
+                  <Input
+                    placeholder="Enter Twilio Auth Token"
+                    value={draft.whatsappApiKey || ""}
+                    onChange={(e) => setDraft({ ...draft, whatsappApiKey: e.target.value })}
+                  />
+                </Fld>
+                <Fld label="Twilio Sender Number (WhatsApp)">
+                  <Input
+                    placeholder="e.g. +14155238886"
+                    value={draft.whatsappSenderNumber || ""}
+                    onChange={(e) => setDraft({ ...draft, whatsappSenderNumber: e.target.value })}
+                  />
+                </Fld>
+              </>
+            )}
+
+            <div className="md:col-span-2">
+              <Fld label="Present Alert Template">
+                <Textarea
+                  rows={2}
+                  value={draft.whatsappTemplatePresent || ""}
+                  onChange={(e) => setDraft({ ...draft, whatsappTemplatePresent: e.target.value })}
+                  placeholder="Use [student_name] as placeholder"
+                />
+              </Fld>
+            </div>
+
+            <div className="md:col-span-2">
+              <Fld label="Absent Alert Template">
+                <Textarea
+                  rows={2}
+                  value={draft.whatsappTemplateAbsent || ""}
+                  onChange={(e) => setDraft({ ...draft, whatsappTemplateAbsent: e.target.value })}
+                  placeholder="Use [student_name] as placeholder"
+                />
+              </Fld>
+            </div>
+          </div>
+        </div>
+
         <div className="glass rounded-2xl p-6">
           <h3 className="mb-4 font-semibold">Logo</h3>
           <div className="flex flex-col items-center gap-4">

@@ -351,3 +351,93 @@ export const syncDbSettings = createServerFn({ method: "POST" })
       throw e;
     }
   });
+
+// --- Server Functions for WhatsApp notifications ---
+export const sendWhatsAppAlert = createServerFn({ method: "POST" })
+  .validator((data: { 
+    recipientPhone: string; 
+    studentName: string; 
+    status: string; 
+  }) => data)
+  .handler(async ({ data }) => {
+    const settings = await getDbSettings();
+    if (!settings) throw new Error("Settings not configured");
+
+    const provider = settings.whatsappProvider || "manual";
+    if (provider === "manual") {
+      return { success: true, manual: true };
+    }
+
+    const { recipientPhone, studentName, status } = data;
+    
+    let template = status === "Present" 
+      ? settings.whatsappTemplatePresent 
+      : settings.whatsappTemplateAbsent;
+      
+    if (!template) {
+      template = `Dear Parent, your child [student_name] was marked ${status} today.`;
+    }
+
+    const messageText = template.replace("[student_name]", studentName);
+
+    // Clean phone number: keep only digits
+    let phone = recipientPhone.replace(/[\s\-\(\)\+]/g, "");
+    if (phone.length === 10) {
+      phone = "91" + phone;
+    }
+
+    const apiKey = settings.whatsappApiKey;
+    const instanceId = settings.whatsappInstanceId;
+
+    if (provider === "ultramsg") {
+      if (!instanceId || !apiKey) throw new Error("UltraMsg credentials missing");
+      const url = `https://api.ultramsg.com/${instanceId}/messages/chat`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          token: apiKey,
+          to: phone,
+          body: messageText
+        })
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`UltraMsg returned error: ${text}`);
+      }
+      return { success: true, automated: true };
+    }
+
+    if (provider === "twilio") {
+      if (!instanceId || !apiKey || !settings.whatsappSenderNumber) {
+        throw new Error("Twilio credentials missing");
+      }
+      const accountSid = instanceId;
+      const authToken = apiKey;
+      const sender = settings.whatsappSenderNumber.replace(/[\s\-\(\)\+]/g, "");
+      
+      const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+      const auth = btoa(`${accountSid}:${authToken}`);
+      
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Authorization": `Basic ${auth}`,
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+          From: `whatsapp:+${sender}`,
+          To: `whatsapp:+${phone}`,
+          Body: messageText
+        })
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Twilio returned error: ${text}`);
+      }
+      return { success: true, automated: true };
+    }
+
+    return { success: false, error: "Unsupported provider" };
+  });
