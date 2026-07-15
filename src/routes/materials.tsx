@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { createServerFn } from "@tanstack/react-start";
 import {
   Upload, Search, Trash2, Download, Eye, FileText, FileImage, FileVideo,
   FileType, Presentation, FolderOpen, Cloud,
@@ -21,51 +20,6 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 
-const uploadFileToDrive = createServerFn({ method: "POST" })
-  .validator((d: { fileName: string; fileBase64: string; mimeType: string }) => d)
-  .handler(async ({ data }) => {
-    const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
-    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-
-    if (!scriptUrl || !folderId) {
-      throw new Error(
-        "Google Apps Script URL or Folder ID is not configured on the server. Please check your .env file."
-      );
-    }
-
-    try {
-      const response = await fetch(scriptUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fileName: data.fileName,
-          fileBase64: data.fileBase64,
-          mimeType: data.mimeType,
-          folderId: folderId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server returned status code ${response.status}`);
-      }
-
-      const result = (await response.json()) as { id?: string; link?: string; error?: string };
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      return {
-        id: result.id!,
-        link: result.link!,
-      };
-    } catch (err: any) {
-      console.error("Apps Script Upload Error:", err);
-      throw new Error(`Google Drive upload failed: ${err.message || err}`);
-    }
-  });
 
 export const Route = createFileRoute("/materials")({
   head: () => ({
@@ -219,13 +173,37 @@ function MaterialsPage() {
         try {
           const fileBase64 = reader.result as string;
           
-          const driveResult = await uploadFileToDrive({
-            data: {
+          const scriptUrl = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
+          const folderId = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
+
+          if (!scriptUrl || !folderId) {
+            throw new Error("Upload configuration is missing. Please check your .env file.");
+          }
+
+          const response = await fetch(scriptUrl, {
+            method: "POST",
+            body: JSON.stringify({
               fileName: file.name,
               fileBase64,
               mimeType,
-            }
+              folderId,
+            }),
           });
+
+          if (!response.ok) {
+            throw new Error(`Upload server returned status ${response.status}`);
+          }
+
+          const result = (await response.json()) as { id?: string; link?: string; error?: string };
+          
+          if (result.error) {
+            throw new Error(result.error);
+          }
+
+          const driveResult = {
+            id: result.id!,
+            link: result.link!,
+          };
 
           setMaterialsState([
             ...materials,
