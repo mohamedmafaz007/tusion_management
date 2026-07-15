@@ -22,37 +22,7 @@ import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 
 
-const getMaterialsFromDrive = createServerFn({ method: "GET" })
-  .handler(async () => {
-    let scriptUrl = process.env.GOOGLE_SCRIPT_URL || process.env.VITE_GOOGLE_SCRIPT_URL;
-    let folderId = process.env.GOOGLE_DRIVE_FOLDER_ID || process.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
-
-    if (scriptUrl) scriptUrl = scriptUrl.replace(/^["']|["']$/g, "");
-    if (folderId) folderId = folderId.replace(/^["']|["']$/g, "");
-
-    if (!scriptUrl || !folderId) {
-      throw new Error(
-        "Google Apps Script URL or Folder ID is not configured on the server. Please check your environment variables."
-      );
-    }
-
-    try {
-      const response = await fetch(`${scriptUrl}?folderId=${folderId}`);
-      if (!response.ok) {
-        throw new Error(`Apps Script server returned status code ${response.status}`);
-      }
-
-      const result = await response.json();
-      if (result && result.error) {
-        throw new Error(result.error);
-      }
-
-      return result;
-    } catch (err: any) {
-      console.error("Server-side materials fetch failed:", err);
-      throw new Error(`Failed to fetch materials from Google Drive: ${err.message || err}`);
-    }
-  });
+import { getDbMaterials } from "@/lib/db";
 
 export const Route = createFileRoute("/materials")({
   head: () => ({
@@ -128,12 +98,12 @@ function MaterialsPage() {
     const fetchMaterials = async () => {
       setIsLoadingList(true);
       try {
-        const data = await getMaterialsFromDrive();
+        const data = await getDbMaterials();
         if (data && Array.isArray(data)) {
           setMaterialsState(data);
         }
       } catch (err) {
-        console.error("Failed to load study materials from Google Drive (CORS-safe proxy):", err);
+        console.error("Failed to load study materials from Neon database:", err);
       } finally {
         setIsLoadingList(false);
       }
