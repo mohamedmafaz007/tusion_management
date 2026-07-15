@@ -96,7 +96,7 @@ export function seedIfNeeded() {
       {
         id: uid(),
         standard: "6th",
-        type: "Worksheet",
+        type: "Worksheets",
         title: "Science Worksheet: Light & Shadows",
         fileName: "science_light_shadows.pdf",
         fileType: "pdf",
@@ -108,7 +108,7 @@ export function seedIfNeeded() {
       {
         id: uid(),
         standard: "7th",
-        type: "Syllabus",
+        type: "Assignments",
         title: "Social Science Syllabus 2024-25",
         fileName: "sst_syllabus_2024.pdf",
         fileType: "pdf",
@@ -120,7 +120,7 @@ export function seedIfNeeded() {
       {
         id: uid(),
         standard: "8th",
-        type: "Worksheet",
+        type: "Worksheets",
         title: "English Grammar Worksheet: Tenses",
         fileName: "english_grammar_tenses.pdf",
         fileType: "pdf",
@@ -132,7 +132,7 @@ export function seedIfNeeded() {
       {
         id: uid(),
         standard: "8th",
-        type: "Question Paper",
+        type: "Question Papers",
         title: "Term 1 Science Question Paper",
         fileName: "science_term1_2023.pdf",
         fileType: "pdf",
