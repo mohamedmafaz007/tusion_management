@@ -1,22 +1,35 @@
-import postgres from "postgres";
 import { createServerFn } from "@tanstack/react-start";
 import type { Student, AttendanceRecord, FeePayment, Material, AppSettings } from "./types";
-
-const connectionString = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL;
 
 // Only initialize database connection on server-side
 const isServer = typeof window === "undefined";
 
-export const sql = isServer && connectionString
-  ? postgres(connectionString.replace(/^["']|["']$/g, ""), {
+let cachedSql: any = null;
+
+async function getSql() {
+  if (typeof window !== "undefined") return null;
+  if (cachedSql) return cachedSql;
+
+  const connectionString = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL;
+  if (!connectionString) return null;
+
+  try {
+    const { default: postgres } = await import("postgres");
+    cachedSql = postgres(connectionString.replace(/^["']|["']$/g, ""), {
       ssl: "require",
       max: 10,
       idle_timeout: 20,
       connect_timeout: 10,
-    })
-  : null;
+    });
+    return cachedSql;
+  } catch (err) {
+    console.error("Failed to dynamically import postgres driver:", err);
+    return null;
+  }
+}
 
 export async function initDb() {
+  const sql = await getSql();
   if (!sql) {
     console.log("Database connection string not configured. Skipping initialization.");
     return;
@@ -116,13 +129,14 @@ export async function initDb() {
 }
 
 // Run initialization as a side-effect on load
-if (isServer && sql) {
+if (isServer) {
   initDb();
 }
 
 // --- Server Functions for Students ---
 export const getDbStudents = createServerFn({ method: "GET" })
   .handler(async () => {
+    const sql = await getSql();
     if (!sql) return [] as Student[];
     try {
       const rows = await sql`SELECT * FROM students`;
@@ -154,9 +168,10 @@ export const getDbStudents = createServerFn({ method: "GET" })
 export const syncDbStudents = createServerFn({ method: "POST" })
   .validator((students: any[]) => students)
   .handler(async ({ data: students }) => {
+    const sql = await getSql();
     if (!sql) return;
     try {
-      await sql.begin(async (sql) => {
+      await sql.begin(async (sql: any) => {
         await sql`DELETE FROM students`;
         if (students.length > 0) {
           await sql`
@@ -173,6 +188,7 @@ export const syncDbStudents = createServerFn({ method: "POST" })
 // --- Server Functions for Attendance ---
 export const getDbAttendance = createServerFn({ method: "GET" })
   .handler(async () => {
+    const sql = await getSql();
     if (!sql) return [] as AttendanceRecord[];
     try {
       const rows = await sql`SELECT * FROM attendance`;
@@ -192,9 +208,10 @@ export const getDbAttendance = createServerFn({ method: "GET" })
 export const syncDbAttendance = createServerFn({ method: "POST" })
   .validator((attendance: any[]) => attendance)
   .handler(async ({ data: attendance }) => {
+    const sql = await getSql();
     if (!sql) return;
     try {
-      await sql.begin(async (sql) => {
+      await sql.begin(async (sql: any) => {
         await sql`DELETE FROM attendance`;
         if (attendance.length > 0) {
           await sql`
@@ -211,6 +228,7 @@ export const syncDbAttendance = createServerFn({ method: "POST" })
 // --- Server Functions for Fees ---
 export const getDbFees = createServerFn({ method: "GET" })
   .handler(async () => {
+    const sql = await getSql();
     if (!sql) return [] as FeePayment[];
     try {
       const rows = await sql`SELECT * FROM fees`;
@@ -232,9 +250,10 @@ export const getDbFees = createServerFn({ method: "GET" })
 export const syncDbFees = createServerFn({ method: "POST" })
   .validator((fees: any[]) => fees)
   .handler(async ({ data: fees }) => {
+    const sql = await getSql();
     if (!sql) return;
     try {
-      await sql.begin(async (sql) => {
+      await sql.begin(async (sql: any) => {
         await sql`DELETE FROM fees`;
         if (fees.length > 0) {
           await sql`
@@ -251,6 +270,7 @@ export const syncDbFees = createServerFn({ method: "POST" })
 // --- Server Functions for Materials ---
 export const getDbMaterials = createServerFn({ method: "GET" })
   .handler(async () => {
+    const sql = await getSql();
     if (!sql) return [] as Material[];
     try {
       const rows = await sql`SELECT * FROM materials`;
@@ -275,9 +295,10 @@ export const getDbMaterials = createServerFn({ method: "GET" })
 export const syncDbMaterials = createServerFn({ method: "POST" })
   .validator((materials: any[]) => materials)
   .handler(async ({ data: materials }) => {
+    const sql = await getSql();
     if (!sql) return;
     try {
-      await sql.begin(async (sql) => {
+      await sql.begin(async (sql: any) => {
         await sql`DELETE FROM materials`;
         if (materials.length > 0) {
           await sql`
@@ -294,6 +315,7 @@ export const syncDbMaterials = createServerFn({ method: "POST" })
 // --- Server Functions for Settings ---
 export const getDbSettings = createServerFn({ method: "GET" })
   .handler(async () => {
+    const sql = await getSql();
     if (!sql) return null;
     try {
       const rows = await sql`SELECT "value" FROM settings WHERE "key" = 'app_settings'`;
@@ -308,6 +330,7 @@ export const getDbSettings = createServerFn({ method: "GET" })
 export const syncDbSettings = createServerFn({ method: "POST" })
   .validator((settings: any) => settings)
   .handler(async ({ data: settings }) => {
+    const sql = await getSql();
     if (!sql) return;
     try {
       const valueStr = JSON.stringify(settings);
