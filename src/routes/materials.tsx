@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 
 
-import { getDbMaterials } from "@/lib/db";
+import { getDbMaterials, isDbConfigured } from "@/lib/db";
 
 export const Route = createFileRoute("/materials")({
   head: () => ({
@@ -98,6 +98,12 @@ function MaterialsPage() {
     const fetchMaterials = async () => {
       setIsLoadingList(true);
       try {
+        const configured = await isDbConfigured();
+        if (!configured) {
+          setIsLoadingList(false);
+          return;
+        }
+
         const data = await getDbMaterials();
         if (data && Array.isArray(data)) {
           setMaterialsState(data);

@@ -21,6 +21,7 @@ import type {
 } from "./types";
 
 import {
+  isDbConfigured,
   getDbStudents, syncDbStudents,
   getDbAttendance, syncDbAttendance,
   getDbFees, syncDbFees,
@@ -35,6 +36,9 @@ function useSynced<T>(getter: () => T, setter: (v: T) => void, key: string) {
     // 1. Fetch from cloud database on mount
     const fetchFromDb = async () => {
       try {
+        const configured = await isDbConfigured();
+        if (!configured) return; // Skip cloud sync if DB is not configured
+
         let dbData: any = null;
         if (key === "students") {
           dbData = await getDbStudents();
@@ -80,6 +84,9 @@ function useSynced<T>(getter: () => T, setter: (v: T) => void, key: string) {
 
     // Save to cloud database in background
     try {
+      const configured = await isDbConfigured();
+      if (!configured) return; // Skip cloud sync if DB is not configured
+
       if (key === "students") {
         await syncDbStudents({ data: next as any[] });
       } else if (key === "attendance") {

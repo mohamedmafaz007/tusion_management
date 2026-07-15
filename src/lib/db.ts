@@ -133,6 +133,13 @@ if (isServer) {
   initDb();
 }
 
+// --- Server Configuration Checks ---
+export const isDbConfigured = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const connectionString = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL;
+    return !!connectionString;
+  });
+
 // --- Server Functions for Students ---
 export const getDbStudents = createServerFn({ method: "GET" })
   .handler(async () => {
