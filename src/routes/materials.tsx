@@ -109,7 +109,8 @@ function MaterialsPage() {
       }
     };
     fetchMaterials();
-  }, [setMaterialsState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handlePreview = (m: typeof materials[0]) => {
     if (m.driveFileId) {
