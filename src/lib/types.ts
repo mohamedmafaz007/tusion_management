@@ -73,6 +73,8 @@ export interface Material {
   fileType: string; // pdf, doc, ppt, img, video
   size: number;
   dataUrl?: string; // base64 (small files only)
+  driveUrl?: string; // Google Drive shareable link
+  driveFileId?: string; // Google Drive file ID
   createdAt: string;
 }
 

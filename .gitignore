@@ -34,3 +34,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Sensitive credentials
+.env
+*ffdf7cf9a487.json
+credentials.json
+service-account.json

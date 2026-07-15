@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
+import { createServerFn } from "@tanstack/react-start";
 import {
   Upload, Search, Trash2, Download, Eye, FileText, FileImage, FileVideo,
-  FileType, Presentation, FolderOpen,
+  FileType, Presentation, FolderOpen, Cloud,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,52 @@ import { MATERIAL_TYPES, STANDARDS, type MaterialType, type Standard } from "@/l
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
+
+const uploadFileToDrive = createServerFn({ method: "POST" })
+  .validator((d: { fileName: string; fileBase64: string; mimeType: string }) => d)
+  .handler(async ({ data }) => {
+    const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
+    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+
+    if (!scriptUrl || !folderId) {
+      throw new Error(
+        "Google Apps Script URL or Folder ID is not configured on the server. Please check your .env file."
+      );
+    }
+
+    try {
+      const response = await fetch(scriptUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileName: data.fileName,
+          fileBase64: data.fileBase64,
+          mimeType: data.mimeType,
+          folderId: folderId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server returned status code ${response.status}`);
+      }
+
+      const result = (await response.json()) as { id?: string; link?: string; error?: string };
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      return {
+        id: result.id!,
+        link: result.link!,
+      };
+    } catch (err: any) {
+      console.error("Apps Script Upload Error:", err);
+      throw new Error(`Google Drive upload failed: ${err.message || err}`);
+    }
+  });
 
 export const Route = createFileRoute("/materials")({
   head: () => ({
@@ -57,6 +104,23 @@ function dataUrlToBlobUrl(dataUrl: string): string {
   }
 }
 
+function extractDriveFileId(url: string): string | null {
+  const reg1 = /\/file\/d\/([a-zA-Z0-9_-]{25,100})/i;
+  const reg2 = /\/d\/([a-zA-Z0-9_-]{25,100})/i;
+  const reg3 = /[?&]id=([a-zA-Z0-9_-]{25,100})/i;
+
+  const m1 = url.match(reg1);
+  if (m1) return m1[1];
+
+  const m2 = url.match(reg2);
+  if (m2) return m2[1];
+
+  const m3 = url.match(reg3);
+  if (m3) return m3[1];
+
+  return null;
+}
+
 function MaterialsPage() {
   useHydrated();
   const [materials, setMaterialsState] = useMaterials();
@@ -67,7 +131,17 @@ function MaterialsPage() {
   const [previewMaterial, setPreviewMaterial] = useState<typeof materials[0] | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  const [uploadSource, setUploadSource] = useState<"local" | "drive">("local");
+  const [driveUrl, setDriveUrl] = useState("");
+  const [driveFileType, setDriveFileType] = useState("pdf");
+  const [isUploading, setIsUploading] = useState(false);
+
   const handlePreview = (m: typeof materials[0]) => {
+    if (m.driveFileId) {
+      setPreviewUrl(`https://drive.google.com/file/d/${m.driveFileId}/preview`);
+      setPreviewMaterial(m);
+      return;
+    }
     if (!m.dataUrl) return;
     const url = dataUrlToBlobUrl(m.dataUrl);
     setPreviewUrl(url);
@@ -101,15 +175,16 @@ function MaterialsPage() {
   const countByStd = (s: Standard) => materials.filter((m) => m.standard === s).length;
 
   const handleUpload = () => {
-    if (!form.file || !form.title.trim()) {
-      toast.error("Provide a title and file");
-      return;
-    }
-    const file = form.file;
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = file.size < 3 * 1024 * 1024 ? (reader.result as string) : undefined;
+    if (uploadSource === "drive") {
+      if (!driveUrl.trim() || !form.title.trim()) {
+        toast.error("Provide a title and Google Drive link");
+        return;
+      }
+      const fileId = extractDriveFileId(driveUrl);
+      if (!fileId) {
+        toast.error("Invalid Google Drive URL. Could not extract File ID.");
+        return;
+      }
       setMaterialsState([
         ...materials,
         {
@@ -117,18 +192,68 @@ function MaterialsPage() {
           standard,
           type: form.type,
           title: form.title.trim(),
-          fileName: file.name,
-          fileType: ext,
-          size: file.size,
-          dataUrl,
+          fileName: "Google Drive File",
+          fileType: driveFileType,
+          size: 0,
+          driveUrl: driveUrl.trim(),
+          driveFileId: fileId,
           createdAt: new Date().toISOString(),
         },
       ]);
-      toast.success("Material uploaded");
+      toast.success("Google Drive material linked");
       setUploadOpen(false);
       setForm({ title: "", type: "Notes", file: null });
-    };
-    reader.readAsDataURL(file);
+      setDriveUrl("");
+    } else {
+      if (!form.file || !form.title.trim()) {
+        toast.error("Provide a title and file");
+        return;
+      }
+      const file = form.file;
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+      const mimeType = file.type || "application/octet-stream";
+
+      setIsUploading(true);
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const fileBase64 = reader.result as string;
+          
+          const driveResult = await uploadFileToDrive({
+            data: {
+              fileName: file.name,
+              fileBase64,
+              mimeType,
+            }
+          });
+
+          setMaterialsState([
+            ...materials,
+            {
+              id: uid(),
+              standard,
+              type: form.type,
+              title: form.title.trim(),
+              fileName: file.name,
+              fileType: ext,
+              size: file.size,
+              driveUrl: driveResult.link,
+              driveFileId: driveResult.id,
+              createdAt: new Date().toISOString(),
+            },
+          ]);
+          toast.success("File uploaded directly to Google Drive!");
+          setUploadOpen(false);
+          setForm({ title: "", type: "Notes", file: null });
+        } catch (err: any) {
+          console.error("Direct upload failed:", err);
+          toast.error(err.message || "Failed to upload to Google Drive");
+        } finally {
+          setIsUploading(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const remove = (id: string) => {
@@ -138,7 +263,13 @@ function MaterialsPage() {
 
   const download = (id: string) => {
     const m = materials.find((mm) => mm.id === id);
-    if (!m?.dataUrl) return toast.error("File data unavailable (large files not stored)");
+    if (!m) return;
+    if (m.driveUrl) {
+      window.open(m.driveUrl, "_blank");
+      toast.success("Opening Google Drive file...");
+      return;
+    }
+    if (!m.dataUrl) return toast.error("File data unavailable (large files not stored)");
     const a = document.createElement("a");
     a.href = m.dataUrl;
     a.download = m.fileName;
@@ -208,20 +339,30 @@ function MaterialsPage() {
           {filtered.map((m) => (
             <div key={m.id} className="glass group flex flex-col gap-3 rounded-2xl p-4 transition-all hover:-translate-y-0.5 hover:shadow-glow">
               <div className="flex items-start justify-between">
-                <div className="grid h-11 w-11 place-items-center rounded-xl gradient-brand text-white shadow-glow">
-                  {extIcon(m.fileType)}
-                </div>
-                <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase">{m.fileType || "file"}</span>
+                {m.driveFileId ? (
+                  <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-500 text-white shadow-glow">
+                    <Cloud className="h-6 w-6" />
+                  </div>
+                ) : (
+                  <div className="grid h-11 w-11 place-items-center rounded-xl gradient-brand text-white shadow-glow">
+                    {extIcon(m.fileType)}
+                  </div>
+                )}
+                {m.driveFileId ? (
+                  <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 text-[10px] font-bold uppercase">Google Drive</span>
+                ) : (
+                  <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase">{m.fileType || "file"}</span>
+                )}
               </div>
               <div className="min-w-0">
                 <div className="truncate font-semibold">{m.title}</div>
                 <div className="truncate text-xs text-muted-foreground">{m.fileName}</div>
                 <div className="mt-1 text-[11px] text-muted-foreground">
-                  {m.type} • {(m.size / 1024).toFixed(1)} KB
+                  {m.type} {m.driveFileId ? "• Cloud" : `• ${(m.size / 1024).toFixed(1)} KB`}
                 </div>
               </div>
               <div className="mt-auto flex gap-1">
-                <Button size="sm" variant="outline" className="flex-1 rounded-lg" onClick={() => handlePreview(m)} disabled={!m.dataUrl}>
+                <Button size="sm" variant="outline" className="flex-1 rounded-lg" onClick={() => handlePreview(m)} disabled={!m.dataUrl && !m.driveFileId}>
                   <Eye className="mr-1 h-3.5 w-3.5" /> Preview
                 </Button>
                 <Button size="sm" variant="outline" className="flex-1 rounded-lg" onClick={() => download(m.id)}>
@@ -242,41 +383,107 @@ function MaterialsPage() {
             <DialogTitle>Upload Study Material — {standard} Standard</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="flex rounded-xl bg-secondary/50 p-1">
+              <button
+                type="button"
+                onClick={() => !isUploading && setUploadSource("local")}
+                disabled={isUploading}
+                className={cn(
+                  "flex-1 rounded-lg py-1.5 text-xs font-semibold transition",
+                  uploadSource === "local" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                  isUploading && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                Local File
+              </button>
+              <button
+                type="button"
+                onClick={() => !isUploading && setUploadSource("drive")}
+                disabled={isUploading}
+                className={cn(
+                  "flex-1 rounded-lg py-1.5 text-xs font-semibold transition",
+                  uploadSource === "drive" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                  isUploading && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                Google Drive Link
+              </button>
+            </div>
+
             <div className="space-y-1.5">
               <Label>Title</Label>
-              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Algebra Notes Ch. 3" />
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Algebra Notes Ch. 3" disabled={isUploading} />
             </div>
             <div className="space-y-1.5">
               <Label>Category</Label>
-              <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as MaterialType })}>
+              <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as MaterialType })} disabled={isUploading}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {MATERIAL_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label>File</Label>
-              <div
-                onClick={() => fileRef.current?.click()}
-                className="cursor-pointer rounded-xl border-2 border-dashed border-border/60 p-6 text-center transition hover:border-primary hover:bg-accent/30"
-              >
-                <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-                <p className="text-sm font-medium">{form.file ? form.file.name : "Click to select file"}</p>
-                <p className="text-xs text-muted-foreground">PDF, DOC, PPT, image, video</p>
+
+            {uploadSource === "local" ? (
+              <div className="space-y-1.5">
+                <Label>File</Label>
+                <div
+                  onClick={() => !isUploading && fileRef.current?.click()}
+                  className={cn(
+                    "cursor-pointer rounded-xl border-2 border-dashed border-border/60 p-6 text-center transition hover:border-primary hover:bg-accent/30",
+                    isUploading && "opacity-50 cursor-not-allowed border-muted"
+                  )}
+                >
+                  <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                  <p className="text-sm font-medium">{form.file ? form.file.name : "Click to select file"}</p>
+                  <p className="text-xs text-muted-foreground">PDF, DOC, PPT, image, video</p>
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,image/*,video/*"
+                  onChange={(e) => setForm({ ...form, file: e.target.files?.[0] ?? null })}
+                  disabled={isUploading}
+                />
               </div>
-              <input
-                ref={fileRef}
-                type="file"
-                className="hidden"
-                accept=".pdf,.doc,.docx,.ppt,.pptx,image/*,video/*"
-                onChange={(e) => setForm({ ...form, file: e.target.files?.[0] ?? null })}
-              />
-            </div>
+            ) : (
+              <>
+                <div className="space-y-1.5">
+                  <Label>Google Drive Link</Label>
+                  <Input
+                    value={driveUrl}
+                    onChange={(e) => setDriveUrl(e.target.value)}
+                    placeholder="https://drive.google.com/file/d/.../view?usp=sharing"
+                    disabled={isUploading}
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Ensure link permission is set to <strong>"Anyone with the link can view"</strong> on Google Drive.
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>File Type / Format</Label>
+                  <Select value={driveFileType} onValueChange={setDriveFileType} disabled={isUploading}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select format" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pdf">PDF Document</SelectItem>
+                      <SelectItem value="doc">Word Document (Docx)</SelectItem>
+                      <SelectItem value="ppt">PowerPoint Presentation (Pptx)</SelectItem>
+                      <SelectItem value="image">Image (PNG, JPEG, WebP)</SelectItem>
+                      <SelectItem value="video">Video (MP4, WebM)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setUploadOpen(false)}>Cancel</Button>
-            <Button className="gradient-brand" onClick={handleUpload}>Upload</Button>
+            <Button variant="outline" onClick={() => setUploadOpen(false)} disabled={isUploading}>Cancel</Button>
+            <Button className="gradient-brand" onClick={handleUpload} disabled={isUploading}>
+              {isUploading ? "Uploading..." : "Upload"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -287,7 +494,9 @@ function MaterialsPage() {
             <DialogTitle>Preview - {previewMaterial?.title}</DialogTitle>
           </DialogHeader>
           {previewUrl && previewMaterial && (
-            previewMaterial.fileType && ["jpg", "jpeg", "png", "gif", "webp"].includes(previewMaterial.fileType.toLowerCase()) ? (
+            previewMaterial.driveFileId ? (
+              <iframe src={previewUrl} title="drive-preview" className="h-[70vh] w-full rounded-xl" />
+            ) : previewMaterial.fileType && ["jpg", "jpeg", "png", "gif", "webp"].includes(previewMaterial.fileType.toLowerCase()) ? (
               <img src={previewUrl} alt="preview" className="max-h-[70vh] w-full rounded-xl object-contain" />
             ) : previewMaterial.fileType && ["mp4", "mov", "webm"].includes(previewMaterial.fileType.toLowerCase()) ? (
               <video src={previewUrl} controls className="max-h-[70vh] w-full rounded-xl" />
