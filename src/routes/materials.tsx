@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createServerFn } from "@tanstack/react-start";
 import {
   Upload, Search, Trash2, Download, Eye, FileText, FileImage, FileVideo,
   FileType, Presentation, FolderOpen, Cloud,
@@ -20,6 +21,35 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 
+
+const getMaterialsFromDrive = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const scriptUrl = process.env.GOOGLE_SCRIPT_URL || process.env.VITE_GOOGLE_SCRIPT_URL;
+    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID || process.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
+
+    if (!scriptUrl || !folderId) {
+      throw new Error(
+        "Google Apps Script URL or Folder ID is not configured on the server. Please check your environment variables."
+      );
+    }
+
+    try {
+      const response = await fetch(`${scriptUrl}?folderId=${folderId}`);
+      if (!response.ok) {
+        throw new Error(`Apps Script server returned status code ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (result && result.error) {
+        throw new Error(result.error);
+      }
+
+      return result;
+    } catch (err: any) {
+      console.error("Server-side materials fetch failed:", err);
+      throw new Error(`Failed to fetch materials from Google Drive: ${err.message || err}`);
+    }
+  });
 
 export const Route = createFileRoute("/materials")({
   head: () => ({
@@ -93,22 +123,14 @@ function MaterialsPage() {
 
   useEffect(() => {
     const fetchMaterials = async () => {
-      const scriptUrl = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
-      const folderId = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
-      if (!scriptUrl || !folderId) return;
-
       setIsLoadingList(true);
       try {
-        const response = await fetch(`${scriptUrl}?folderId=${folderId}`);
-        if (!response.ok) {
-          throw new Error(`Status ${response.status}`);
-        }
-        const data = await response.json();
-        if (data && !data.error && Array.isArray(data)) {
+        const data = await getMaterialsFromDrive();
+        if (data && Array.isArray(data)) {
           setMaterialsState(data);
         }
       } catch (err) {
-        console.error("Failed to load study materials from Google Drive:", err);
+        console.error("Failed to load study materials from Google Drive (CORS-safe proxy):", err);
       } finally {
         setIsLoadingList(false);
       }
