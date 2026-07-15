@@ -23,19 +23,40 @@ export async function initDb() {
   }
 
   try {
+    // Check if we need to migrate from the old skeleton schema to the full schema
+    const schemaCheck = await sql`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'students' AND column_name = 'gender'
+    `;
+    
+    if (schemaCheck.length === 0) {
+      console.log("Migrating database schemas to match TypeScript interfaces...");
+      await sql`DROP TABLE IF EXISTS students CASCADE`;
+      await sql`DROP TABLE IF EXISTS attendance CASCADE`;
+      await sql`DROP TABLE IF EXISTS fees CASCADE`;
+      await sql`DROP TABLE IF EXISTS materials CASCADE`;
+      await sql`DROP TABLE IF EXISTS settings CASCADE`;
+    }
+
     // 1. Students table
     await sql`
       CREATE TABLE IF NOT EXISTS students (
         "id" TEXT PRIMARY KEY,
+        "photo" TEXT,
         "name" TEXT NOT NULL,
-        "standard" TEXT NOT NULL,
+        "gender" TEXT NOT NULL,
+        "dob" TEXT NOT NULL,
         "school" TEXT NOT NULL,
-        "parentName" TEXT,
-        "parentPhone" TEXT,
-        "address" TEXT,
-        "joinedDate" TEXT,
-        "status" TEXT NOT NULL,
-        "totalFees" INTEGER NOT NULL,
+        "standard" TEXT NOT NULL,
+        "section" TEXT NOT NULL,
+        "parentName" TEXT NOT NULL,
+        "fatherMobile" TEXT NOT NULL,
+        "motherMobile" TEXT NOT NULL,
+        "address" TEXT NOT NULL,
+        "joiningDate" TEXT NOT NULL,
+        "monthlyFees" INTEGER NOT NULL,
+        "admissionFees" INTEGER NOT NULL,
+        "notes" TEXT,
         "createdAt" TEXT NOT NULL
       )
     `;
@@ -47,7 +68,7 @@ export async function initDb() {
         "studentId" TEXT NOT NULL,
         "date" TEXT NOT NULL,
         "status" TEXT NOT NULL,
-        "notes" TEXT
+        "remarks" TEXT
       )
     `;
 
@@ -56,11 +77,11 @@ export async function initDb() {
       CREATE TABLE IF NOT EXISTS fees (
         "id" TEXT PRIMARY KEY,
         "studentId" TEXT NOT NULL,
+        "month" TEXT NOT NULL,
         "amount" INTEGER NOT NULL,
-        "date" TEXT NOT NULL,
-        "method" TEXT NOT NULL,
-        "status" TEXT NOT NULL,
-        "remarks" TEXT
+        "paidAmount" INTEGER NOT NULL,
+        "paidDate" TEXT,
+        "status" TEXT NOT NULL
       )
     `;
 
@@ -107,15 +128,21 @@ export const getDbStudents = createServerFn({ method: "GET" })
       const rows = await sql`SELECT * FROM students`;
       return rows.map(r => ({
         id: r.id as string,
+        photo: r.photo as string | undefined,
         name: r.name as string,
-        standard: r.standard as string,
+        gender: r.gender as any,
+        dob: r.dob as string,
         school: r.school as string,
-        parentName: r.parentName as string | undefined,
-        parentPhone: r.parentPhone as string | undefined,
-        address: r.address as string | undefined,
-        joinedDate: r.joinedDate as string | undefined,
-        status: r.status as string,
-        totalFees: Number(r.totalFees),
+        standard: r.standard as any,
+        section: r.section as string,
+        parentName: r.parentName as string,
+        fatherMobile: r.fatherMobile as string,
+        motherMobile: r.motherMobile as string,
+        address: r.address as string,
+        joiningDate: r.joiningDate as string,
+        monthlyFees: Number(r.monthlyFees),
+        admissionFees: Number(r.admissionFees),
+        notes: r.notes as string | undefined,
         createdAt: r.createdAt as string
       })) as Student[];
     } catch (e) {
@@ -133,7 +160,7 @@ export const syncDbStudents = createServerFn({ method: "POST" })
         await sql`DELETE FROM students`;
         if (students.length > 0) {
           await sql`
-            INSERT INTO students ${(sql as any)(students, ["id", "name", "standard", "school", "parentName", "parentPhone", "address", "joinedDate", "status", "totalFees", "createdAt"])}
+            INSERT INTO students ${(sql as any)(students, ["id", "photo", "name", "gender", "dob", "school", "standard", "section", "parentName", "fatherMobile", "motherMobile", "address", "joiningDate", "monthlyFees", "admissionFees", "notes", "createdAt"])}
           `;
         }
       });
@@ -153,8 +180,8 @@ export const getDbAttendance = createServerFn({ method: "GET" })
         id: r.id as string,
         studentId: r.studentId as string,
         date: r.date as string,
-        status: r.status as string,
-        notes: r.notes as string | undefined
+        status: r.status as any,
+        remarks: r.remarks as string | undefined
       })) as AttendanceRecord[];
     } catch (e) {
       console.error("Failed to get attendance from DB:", e);
@@ -171,7 +198,7 @@ export const syncDbAttendance = createServerFn({ method: "POST" })
         await sql`DELETE FROM attendance`;
         if (attendance.length > 0) {
           await sql`
-            INSERT INTO attendance ${(sql as any)(attendance, ["id", "studentId", "date", "status", "notes"])}
+            INSERT INTO attendance ${(sql as any)(attendance, ["id", "studentId", "date", "status", "remarks"])}
           `;
         }
       });
@@ -190,11 +217,11 @@ export const getDbFees = createServerFn({ method: "GET" })
       return rows.map(r => ({
         id: r.id as string,
         studentId: r.studentId as string,
+        month: r.month as string,
         amount: Number(r.amount),
-        date: r.date as string,
-        method: r.method as string,
-        status: r.status as string,
-        remarks: r.remarks as string | undefined
+        paidAmount: Number(r.paidAmount),
+        paidDate: r.paidDate as string | undefined,
+        status: r.status as any
       })) as FeePayment[];
     } catch (e) {
       console.error("Failed to get fees from DB:", e);
@@ -211,7 +238,7 @@ export const syncDbFees = createServerFn({ method: "POST" })
         await sql`DELETE FROM fees`;
         if (fees.length > 0) {
           await sql`
-            INSERT INTO fees ${(sql as any)(fees, ["id", "studentId", "amount", "date", "method", "status", "remarks"])}
+            INSERT INTO fees ${(sql as any)(fees, ["id", "studentId", "month", "amount", "paidAmount", "paidDate", "status"])}
           `;
         }
       });
