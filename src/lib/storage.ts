@@ -77,6 +77,75 @@ const STDS: Standard[] = ["6th", "7th", "8th", "9th", "10th", "11th", "12th"];
 
 export function seedIfNeeded() {
   if (typeof window === "undefined") return;
+
+  // Seed study materials if empty (runs even for previously seeded databases)
+  if (!localStorage.getItem("tms.seeded_materials") && getMaterials().length === 0) {
+    const sampleMaterials: Material[] = [
+      {
+        id: uid(),
+        standard: "6th",
+        type: "Notes",
+        title: "Mathematics Chapter 1: Number Systems",
+        fileName: "math_ch1_numbers.pdf",
+        fileType: "pdf",
+        size: 125430,
+        driveUrl: "https://drive.google.com/file/d/1UMwKbEB28d3VBEXgDLhpypnsseufSenG/view",
+        driveFileId: "1UMwKbEB28d3VBEXgDLhpypnsseufSenG",
+        createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+      },
+      {
+        id: uid(),
+        standard: "6th",
+        type: "Worksheet",
+        title: "Science Worksheet: Light & Shadows",
+        fileName: "science_light_shadows.pdf",
+        fileType: "pdf",
+        size: 98450,
+        driveUrl: "https://drive.google.com/file/d/1UMwKbEB28d3VBEXgDLhpypnsseufSenG/view",
+        driveFileId: "1UMwKbEB28d3VBEXgDLhpypnsseufSenG",
+        createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+      },
+      {
+        id: uid(),
+        standard: "7th",
+        type: "Syllabus",
+        title: "Social Science Syllabus 2024-25",
+        fileName: "sst_syllabus_2024.pdf",
+        fileType: "pdf",
+        size: 204500,
+        driveUrl: "https://drive.google.com/file/d/1UMwKbEB28d3VBEXgDLhpypnsseufSenG/view",
+        driveFileId: "1UMwKbEB28d3VBEXgDLhpypnsseufSenG",
+        createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+      },
+      {
+        id: uid(),
+        standard: "8th",
+        type: "Worksheet",
+        title: "English Grammar Worksheet: Tenses",
+        fileName: "english_grammar_tenses.pdf",
+        fileType: "pdf",
+        size: 76500,
+        driveUrl: "https://drive.google.com/file/d/1UMwKbEB28d3VBEXgDLhpypnsseufSenG/view",
+        driveFileId: "1UMwKbEB28d3VBEXgDLhpypnsseufSenG",
+        createdAt: new Date(Date.now() - 1 * 86400000).toISOString(),
+      },
+      {
+        id: uid(),
+        standard: "8th",
+        type: "Question Paper",
+        title: "Term 1 Science Question Paper",
+        fileName: "science_term1_2023.pdf",
+        fileType: "pdf",
+        size: 312000,
+        driveUrl: "https://drive.google.com/file/d/1UMwKbEB28d3VBEXgDLhpypnsseufSenG/view",
+        driveFileId: "1UMwKbEB28d3VBEXgDLhpypnsseufSenG",
+        createdAt: new Date(Date.now() - 4 * 86400000).toISOString(),
+      }
+    ];
+    setMaterials(sampleMaterials);
+    localStorage.setItem("tms.seeded_materials", "1");
+  }
+
   if (localStorage.getItem(KEYS.seeded)) return;
 
   const students: Student[] = SAMPLE_NAMES.map((name, i) => ({
