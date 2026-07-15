@@ -24,8 +24,11 @@ import { Label } from "@/components/ui/label";
 
 const getMaterialsFromDrive = createServerFn({ method: "GET" })
   .handler(async () => {
-    const scriptUrl = process.env.GOOGLE_SCRIPT_URL || process.env.VITE_GOOGLE_SCRIPT_URL;
-    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID || process.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
+    let scriptUrl = process.env.GOOGLE_SCRIPT_URL || process.env.VITE_GOOGLE_SCRIPT_URL;
+    let folderId = process.env.GOOGLE_DRIVE_FOLDER_ID || process.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
+
+    if (scriptUrl) scriptUrl = scriptUrl.replace(/^["']|["']$/g, "");
+    if (folderId) folderId = folderId.replace(/^["']|["']$/g, "");
 
     if (!scriptUrl || !folderId) {
       throw new Error(
@@ -177,8 +180,11 @@ function MaterialsPage() {
   const countByStd = (s: Standard) => materials.filter((m) => m.standard === s).length;
 
   const handleUpload = async () => {
-    const scriptUrl = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
-    const folderId = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
+    let scriptUrl = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
+    let folderId = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
+
+    if (scriptUrl) scriptUrl = scriptUrl.replace(/^["']|["']$/g, "");
+    if (folderId) folderId = folderId.replace(/^["']|["']$/g, "");
 
     if (!scriptUrl || !folderId) {
       toast.error("Upload configuration is missing. Please check your .env file.");
@@ -312,8 +318,11 @@ function MaterialsPage() {
   };
 
   const remove = async (id: string) => {
-    const scriptUrl = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
-    const folderId = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
+    let scriptUrl = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
+    let folderId = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
+
+    if (scriptUrl) scriptUrl = scriptUrl.replace(/^["']|["']$/g, "");
+    if (folderId) folderId = folderId.replace(/^["']|["']$/g, "");
 
     // Optimistically update the UI list
     setMaterialsState(materials.filter((m) => m.id !== id));
