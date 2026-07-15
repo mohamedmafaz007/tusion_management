@@ -1,5 +1,6 @@
 import postgres from "postgres";
 import { createServerFn } from "@tanstack/react-start";
+import type { Student, AttendanceRecord, FeePayment, Material, AppSettings } from "./types";
 
 const connectionString = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL;
 
@@ -101,16 +102,25 @@ if (isServer && sql) {
 // --- Server Functions for Students ---
 export const getDbStudents = createServerFn({ method: "GET" })
   .handler(async () => {
-    if (!sql) return [];
+    if (!sql) return [] as Student[];
     try {
       const rows = await sql`SELECT * FROM students`;
       return rows.map(r => ({
-        ...r,
+        id: r.id as string,
+        name: r.name as string,
+        standard: r.standard as string,
+        school: r.school as string,
+        parentName: r.parentName as string | undefined,
+        parentPhone: r.parentPhone as string | undefined,
+        address: r.address as string | undefined,
+        joinedDate: r.joinedDate as string | undefined,
+        status: r.status as string,
         totalFees: Number(r.totalFees),
-      }));
+        createdAt: r.createdAt as string
+      })) as Student[];
     } catch (e) {
       console.error("Failed to get students from DB:", e);
-      return [];
+      return [] as Student[];
     }
   });
 
@@ -123,7 +133,7 @@ export const syncDbStudents = createServerFn({ method: "POST" })
         await sql`DELETE FROM students`;
         if (students.length > 0) {
           await sql`
-            INSERT INTO students ${sql(students, "id", "name", "standard", "school", "parentName", "parentPhone", "address", "joinedDate", "status", "totalFees", "createdAt")}
+            INSERT INTO students ${(sql as any)(students, ["id", "name", "standard", "school", "parentName", "parentPhone", "address", "joinedDate", "status", "totalFees", "createdAt"])}
           `;
         }
       });
@@ -136,12 +146,19 @@ export const syncDbStudents = createServerFn({ method: "POST" })
 // --- Server Functions for Attendance ---
 export const getDbAttendance = createServerFn({ method: "GET" })
   .handler(async () => {
-    if (!sql) return [];
+    if (!sql) return [] as AttendanceRecord[];
     try {
-      return await sql`SELECT * FROM attendance`;
+      const rows = await sql`SELECT * FROM attendance`;
+      return rows.map(r => ({
+        id: r.id as string,
+        studentId: r.studentId as string,
+        date: r.date as string,
+        status: r.status as string,
+        notes: r.notes as string | undefined
+      })) as AttendanceRecord[];
     } catch (e) {
       console.error("Failed to get attendance from DB:", e);
-      return [];
+      return [] as AttendanceRecord[];
     }
   });
 
@@ -154,7 +171,7 @@ export const syncDbAttendance = createServerFn({ method: "POST" })
         await sql`DELETE FROM attendance`;
         if (attendance.length > 0) {
           await sql`
-            INSERT INTO attendance ${sql(attendance, "id", "studentId", "date", "status", "notes")}
+            INSERT INTO attendance ${(sql as any)(attendance, ["id", "studentId", "date", "status", "notes"])}
           `;
         }
       });
@@ -167,16 +184,21 @@ export const syncDbAttendance = createServerFn({ method: "POST" })
 // --- Server Functions for Fees ---
 export const getDbFees = createServerFn({ method: "GET" })
   .handler(async () => {
-    if (!sql) return [];
+    if (!sql) return [] as FeePayment[];
     try {
       const rows = await sql`SELECT * FROM fees`;
       return rows.map(r => ({
-        ...r,
+        id: r.id as string,
+        studentId: r.studentId as string,
         amount: Number(r.amount),
-      }));
+        date: r.date as string,
+        method: r.method as string,
+        status: r.status as string,
+        remarks: r.remarks as string | undefined
+      })) as FeePayment[];
     } catch (e) {
       console.error("Failed to get fees from DB:", e);
-      return [];
+      return [] as FeePayment[];
     }
   });
 
@@ -189,7 +211,7 @@ export const syncDbFees = createServerFn({ method: "POST" })
         await sql`DELETE FROM fees`;
         if (fees.length > 0) {
           await sql`
-            INSERT INTO fees ${sql(fees, "id", "studentId", "amount", "date", "method", "status", "remarks")}
+            INSERT INTO fees ${(sql as any)(fees, ["id", "studentId", "amount", "date", "method", "status", "remarks"])}
           `;
         }
       });
@@ -202,16 +224,24 @@ export const syncDbFees = createServerFn({ method: "POST" })
 // --- Server Functions for Materials ---
 export const getDbMaterials = createServerFn({ method: "GET" })
   .handler(async () => {
-    if (!sql) return [];
+    if (!sql) return [] as Material[];
     try {
       const rows = await sql`SELECT * FROM materials`;
       return rows.map(r => ({
-        ...r,
+        id: r.id as string,
+        standard: r.standard as any,
+        type: r.type as any,
+        title: r.title as string,
+        fileName: r.fileName as string,
+        fileType: r.fileType as string,
         size: Number(r.size),
-      }));
+        driveUrl: r.driveUrl as string,
+        driveFileId: r.driveFileId as string,
+        createdAt: r.createdAt as string
+      })) as Material[];
     } catch (e) {
       console.error("Failed to get materials from DB:", e);
-      return [];
+      return [] as Material[];
     }
   });
 
@@ -224,7 +254,7 @@ export const syncDbMaterials = createServerFn({ method: "POST" })
         await sql`DELETE FROM materials`;
         if (materials.length > 0) {
           await sql`
-            INSERT INTO materials ${sql(materials, "id", "standard", "type", "title", "fileName", "fileType", "size", "driveUrl", "driveFileId", "createdAt")}
+            INSERT INTO materials ${(sql as any)(materials, ["id", "standard", "type", "title", "fileName", "fileType", "size", "driveUrl", "driveFileId", "createdAt"])}
           `;
         }
       });
@@ -241,7 +271,7 @@ export const getDbSettings = createServerFn({ method: "GET" })
     try {
       const rows = await sql`SELECT "value" FROM settings WHERE "key" = 'app_settings'`;
       if (rows.length === 0) return null;
-      return JSON.parse(rows[0].value);
+      return JSON.parse(rows[0].value) as AppSettings;
     } catch (e) {
       console.error("Failed to get settings from DB:", e);
       return null;

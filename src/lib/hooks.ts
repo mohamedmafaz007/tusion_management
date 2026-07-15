@@ -81,15 +81,15 @@ function useSynced<T>(getter: () => T, setter: (v: T) => void, key: string) {
     // Save to cloud database in background
     try {
       if (key === "students") {
-        await syncDbStudents(next as any[]);
+        await syncDbStudents({ data: next as any[] });
       } else if (key === "attendance") {
-        await syncDbAttendance(next as any[]);
+        await syncDbAttendance({ data: next as any[] });
       } else if (key === "fees") {
-        await syncDbFees(next as any[]);
+        await syncDbFees({ data: next as any[] });
       } else if (key === "materials") {
-        await syncDbMaterials(next as any[]);
+        await syncDbMaterials({ data: next as any[] });
       } else if (key === "settings") {
-        await syncDbSettings(next);
+        await syncDbSettings({ data: next });
       }
     } catch (err) {
       console.error(`Failed to sync ${key} to cloud database:`, err);
