@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Upload, Search, Trash2, Download, Eye, FileText, FileImage, FileVideo,
   FileType, Presentation, FolderOpen, Cloud,
@@ -89,6 +89,32 @@ function MaterialsPage() {
   const [driveUrl, setDriveUrl] = useState("");
   const [driveFileType, setDriveFileType] = useState("pdf");
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoadingList, setIsLoadingList] = useState(false);
+
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      const scriptUrl = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
+      const folderId = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
+      if (!scriptUrl || !folderId) return;
+
+      setIsLoadingList(true);
+      try {
+        const response = await fetch(`${scriptUrl}?folderId=${folderId}`);
+        if (!response.ok) {
+          throw new Error(`Status ${response.status}`);
+        }
+        const data = await response.json();
+        if (data && !data.error && Array.isArray(data)) {
+          setMaterialsState(data);
+        }
+      } catch (err) {
+        console.error("Failed to load study materials from Google Drive:", err);
+      } finally {
+        setIsLoadingList(false);
+      }
+    };
+    fetchMaterials();
+  }, [setMaterialsState]);
 
   const handlePreview = (m: typeof materials[0]) => {
     if (m.driveFileId) {
@@ -128,7 +154,15 @@ function MaterialsPage() {
 
   const countByStd = (s: Standard) => materials.filter((m) => m.standard === s).length;
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
+    const scriptUrl = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
+    const folderId = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
+
+    if (!scriptUrl || !folderId) {
+      toast.error("Upload configuration is missing. Please check your .env file.");
+      return;
+    }
+
     if (uploadSource === "drive") {
       if (!driveUrl.trim() || !form.title.trim()) {
         toast.error("Provide a title and Google Drive link");
@@ -139,25 +173,55 @@ function MaterialsPage() {
         toast.error("Invalid Google Drive URL. Could not extract File ID.");
         return;
       }
-      setMaterialsState([
-        ...materials,
-        {
-          id: uid(),
-          standard,
-          type: form.type,
-          title: form.title.trim(),
-          fileName: "Google Drive File",
-          fileType: driveFileType,
-          size: 0,
-          driveUrl: driveUrl.trim(),
-          driveFileId: fileId,
-          createdAt: new Date().toISOString(),
-        },
-      ]);
-      toast.success("Google Drive material linked");
-      setUploadOpen(false);
-      setForm({ title: "", type: "Notes", file: null });
-      setDriveUrl("");
+
+      setIsUploading(true);
+      try {
+        const response = await fetch(scriptUrl, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "link",
+            fileId,
+            title: form.title.trim(),
+            standard,
+            type: form.type,
+            folderId,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Upload server returned status ${response.status}`);
+        }
+
+        const result = (await response.json()) as { id?: string; link?: string; error?: string };
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        setMaterialsState([
+          ...materials,
+          {
+            id: result.id!,
+            standard,
+            type: form.type,
+            title: form.title.trim(),
+            fileName: "Google Drive File",
+            fileType: driveFileType,
+            size: 0,
+            driveUrl: result.link!,
+            driveFileId: result.id!,
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+        toast.success("Google Drive material linked");
+        setUploadOpen(false);
+        setForm({ title: "", type: "Notes", file: null });
+        setDriveUrl("");
+      } catch (err: any) {
+        console.error("Linking failed:", err);
+        toast.error(err.message || "Failed to link Google Drive file");
+      } finally {
+        setIsUploading(false);
+      }
     } else {
       if (!form.file || !form.title.trim()) {
         toast.error("Provide a title and file");
@@ -173,13 +237,6 @@ function MaterialsPage() {
         try {
           const fileBase64 = reader.result as string;
           
-          const scriptUrl = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
-          const folderId = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
-
-          if (!scriptUrl || !folderId) {
-            throw new Error("Upload configuration is missing. Please check your .env file.");
-          }
-
           const response = await fetch(scriptUrl, {
             method: "POST",
             body: JSON.stringify({
@@ -187,6 +244,9 @@ function MaterialsPage() {
               fileBase64,
               mimeType,
               folderId,
+              title: form.title.trim(),
+              standard,
+              type: form.type,
             }),
           });
 
@@ -200,23 +260,18 @@ function MaterialsPage() {
             throw new Error(result.error);
           }
 
-          const driveResult = {
-            id: result.id!,
-            link: result.link!,
-          };
-
           setMaterialsState([
             ...materials,
             {
-              id: uid(),
+              id: result.id!,
               standard,
               type: form.type,
               title: form.title.trim(),
               fileName: file.name,
               fileType: ext,
               size: file.size,
-              driveUrl: driveResult.link,
-              driveFileId: driveResult.id,
+              driveUrl: result.link!,
+              driveFileId: result.id!,
               createdAt: new Date().toISOString(),
             },
           ]);
@@ -234,9 +289,28 @@ function MaterialsPage() {
     }
   };
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
+    const scriptUrl = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
+    const folderId = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
+
+    // Optimistically update the UI list
     setMaterialsState(materials.filter((m) => m.id !== id));
     toast.success("Material deleted");
+
+    if (scriptUrl && folderId) {
+      try {
+        await fetch(scriptUrl, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "delete",
+            fileId: id,
+            folderId,
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to delete file from Google Drive:", err);
+      }
+    }
   };
 
   const download = (id: string) => {
@@ -304,7 +378,27 @@ function MaterialsPage() {
         </Select>
       </div>
 
-      {filtered.length === 0 ? (
+      {isLoadingList ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="glass animate-pulse flex flex-col gap-3 rounded-2xl p-4">
+              <div className="flex items-start justify-between">
+                <div className="h-11 w-11 rounded-xl bg-muted/30" />
+                <div className="h-4 w-16 rounded bg-muted/30" />
+              </div>
+              <div className="space-y-2 mt-2">
+                <div className="h-4 w-3/4 rounded bg-muted/30" />
+                <div className="h-3 w-1/2 rounded bg-muted/30" />
+              </div>
+              <div className="mt-auto flex gap-1 pt-4">
+                <div className="h-8 flex-1 rounded-lg bg-muted/30" />
+                <div className="h-8 flex-1 rounded-lg bg-muted/30" />
+                <div className="h-8 w-8 rounded-lg bg-muted/30" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="glass rounded-2xl p-10 text-center text-muted-foreground">
           <FolderOpen className="mx-auto mb-3 h-10 w-10 opacity-50" />
           <p>No materials in {standard} standard yet.</p>
