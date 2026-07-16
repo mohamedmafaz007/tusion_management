@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MaterialsRouteImport } from './routes/materials'
 import { Route as FeesRouteImport } from './routes/fees'
 import { Route as AttendanceRouteImport } from './routes/attendance'
@@ -33,6 +34,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MaterialsRoute = MaterialsRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/attendance': typeof AttendanceRoute
   '/fees': typeof FeesRoute
   '/materials': typeof MaterialsRoute
+  '/messages': typeof MessagesRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/attendance': typeof AttendanceRoute
   '/fees': typeof FeesRoute
   '/materials': typeof MaterialsRoute
+  '/messages': typeof MessagesRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/attendance': typeof AttendanceRoute
   '/fees': typeof FeesRoute
   '/materials': typeof MaterialsRoute
+  '/messages': typeof MessagesRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/fees'
     | '/materials'
+    | '/messages'
     | '/reports'
     | '/settings'
     | '/sitemap.xml'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/fees'
     | '/materials'
+    | '/messages'
     | '/reports'
     | '/settings'
     | '/sitemap.xml'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/fees'
     | '/materials'
+    | '/messages'
     | '/reports'
     | '/settings'
     | '/sitemap.xml'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   AttendanceRoute: typeof AttendanceRoute
   FeesRoute: typeof FeesRoute
   MaterialsRoute: typeof MaterialsRoute
+  MessagesRoute: typeof MessagesRoute
   ReportsRoute: typeof ReportsRoute
   SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -181,6 +194,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/materials': {
@@ -240,6 +260,7 @@ const rootRouteChildren: RootRouteChildren = {
   AttendanceRoute: AttendanceRoute,
   FeesRoute: FeesRoute,
   MaterialsRoute: MaterialsRoute,
+  MessagesRoute: MessagesRoute,
   ReportsRoute: ReportsRoute,
   SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

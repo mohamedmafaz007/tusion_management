@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { CalendarIcon, CheckCheck, XCircle, Users } from "lucide-react";
+import { CalendarIcon, CheckCheck, XCircle, Users, Send } from "lucide-react";
 import { format } from "date-fns";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { initials, studentAvatarStyle } from "@/lib/derive";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { sendWhatsAppAlert } from "@/lib/db";
+import { sendWhatsAppAlert, sendBulkAttendanceAlerts } from "@/lib/db";
 
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -52,8 +52,36 @@ function AttendancePage() {
   const [standard, setStandard] = useState<string>("all");
   const [date, setDate] = useState<Date>(new Date());
   const [remarks, setRemarks] = useState<Record<string, string>>({});
+  const [isSendingAlerts, setIsSendingAlerts] = useState(false);
 
   const dateKey = format(date, "yyyy-MM-dd");
+
+  const handleSaveAndSendBulkAlerts = async () => {
+    const provider = settings.whatsappProvider || "manual";
+    if (provider === "manual") {
+      toast.warning("WhatsApp Provider is set to Manual. Please select Twilio, UltraMsg, or Baileys in Settings to send automated notifications.");
+      return;
+    }
+
+    setIsSendingAlerts(true);
+    const loadingToast = toast.loading(`Sending automated bulk attendance alerts to parents...`);
+    try {
+      const res = await sendBulkAttendanceAlerts({ 
+        date: dateKey, 
+        standard 
+      });
+
+      if (res.success) {
+        toast.success(`Success! Sent ${res.sent} attendance alerts (${res.failed} failed)`, { id: loadingToast });
+      } else {
+        toast.error("Failed to send bulk alerts.", { id: loadingToast });
+      }
+    } catch (err: any) {
+      toast.error(`Error: ${err.message || err}`, { id: loadingToast });
+    } finally {
+      setIsSendingAlerts(false);
+    }
+  };
   const filtered = useMemo(
     () => (standard === "all" ? students : students.filter((s) => s.standard === standard)),
     [students, standard],
@@ -147,14 +175,21 @@ function AttendancePage() {
         title="Daily Attendance"
         description="Mark attendance for the selected date and standard."
         actions={
-          <>
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" className="rounded-xl" onClick={() => markAll("Present")}>
               <CheckCheck className="mr-2 h-4 w-4" /> Mark All Present
             </Button>
             <Button variant="outline" className="rounded-xl" onClick={() => markAll("Absent")}>
               <XCircle className="mr-2 h-4 w-4" /> Mark All Absent
             </Button>
-          </>
+            <Button 
+              className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-glow" 
+              onClick={handleSaveAndSendBulkAlerts}
+              disabled={isSendingAlerts || filtered.length === 0}
+            >
+              <Send className="mr-2 h-4 w-4" /> Save & Send Alerts
+            </Button>
+          </div>
         }
       />
 

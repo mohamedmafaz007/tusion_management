@@ -15,6 +15,7 @@ import {
   Sun,
   Moon,
   LogOut,
+  MessageSquare,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ const nav: NavItem[] = [
   { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/fees", label: "Fees", icon: Wallet },
   { to: "/materials", label: "Materials", icon: BookOpen },
+  { to: "/messages", label: "Message Logs", icon: MessageSquare },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 

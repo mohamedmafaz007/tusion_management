@@ -62,9 +62,13 @@ export const DEFAULT_SETTINGS: AppSettings = {
   notifications: true,
   language: "English",
   whatsappProvider: "manual",
-  whatsappTemplatePresent: "Dear Parent, your child [student_name] was PRESENT at Vishwa Tuition Center today. Regards, Anita Sharma.",
-  whatsappTemplateAbsent: "Dear Parent, your child [student_name] was ABSENT from Vishwa Tuition Center today. Please check with them. Regards, Anita Sharma.",
+  whatsappTemplatePresent: "Dear Parent, your child [student_name] was marked ✅ PRESENT at Vishwa Tuition Center today ([date]) at [time]. Regards, Vishwa Tuition Center.",
+  whatsappTemplateAbsent: "Dear Parent, your child [student_name] was marked ❌ ABSENT from Vishwa Tuition Center today ([date]). Please check with them. Regards, Vishwa Tuition Center.",
+  whatsappTemplateLate: "Dear Parent, your child [student_name] arrived ⏰ LATE at Vishwa Tuition Center today ([date]) at [time]. Regards, Vishwa Tuition Center.",
   whatsappTemplateWelcome: "Dear Parent, thank you for registering [student_name] at Vishwa Tuition Center. We are excited to guide them on their academic journey. Regards, Prof. Anita Sharma.",
+  whatsappTemplateFeeReminder: "Dear Parent, this is a reminder that the tuition fee of Rs. [amount] for [student_name] (Std: [standard]) for [month] is pending. Please arrange payment at your earliest convenience. Regards, Vishwa Tuition Center.",
+  whatsappTemplateFeeOverdue: "Dear Parent, the tuition fee of Rs. [amount] for [student_name] for [month] is overdue. Kindly clear the dues to avoid any inconvenience. Regards, Vishwa Tuition Center.",
+  whatsappTemplateBirthday: "Dear Parent, Vishwa Tuition Center wishes [student_name] a very Happy Birthday! 🎉🎂 May this year bring them great success. Regards, Vishwa Tuition Center.",
 };
 export const getSettings = () => read<AppSettings>(KEYS.settings, DEFAULT_SETTINGS);
 export const setSettings = (v: AppSettings) => write(KEYS.settings, v);

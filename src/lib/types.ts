@@ -93,5 +93,31 @@ export interface AppSettings {
   whatsappSenderNumber?: string;
   whatsappTemplatePresent?: string;
   whatsappTemplateAbsent?: string;
+  whatsappTemplateLate?: string;
   whatsappTemplateWelcome?: string;
+  whatsappTemplateFeeReminder?: string;
+  whatsappTemplateFeeOverdue?: string;
+  whatsappTemplateBirthday?: string;
+}
+
+// --- Message Logs ---
+
+export type MessageType =
+  | "welcome"
+  | "attendance"
+  | "fee_reminder"
+  | "fee_receipt"
+  | "birthday"
+  | "fee_overdue";
+
+export interface MessageLog {
+  id: string;
+  type: MessageType;
+  studentId: string;
+  studentName: string;
+  recipientPhone: string;
+  message: string;
+  status: "sent" | "failed";
+  error?: string;
+  timestamp: string;
 }

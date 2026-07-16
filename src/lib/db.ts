@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import type { Student, AttendanceRecord, FeePayment, Material, AppSettings } from "./types";
+import type { Student, AttendanceRecord, FeePayment, Material, AppSettings, MessageLog, MessageType } from "./types";
 
 // Only initialize database connection on server-side
 const isServer = typeof window === "undefined";
@@ -119,6 +119,21 @@ export async function initDb() {
       CREATE TABLE IF NOT EXISTS settings (
         "key" TEXT PRIMARY KEY,
         "value" TEXT NOT NULL
+      )
+    `;
+
+    // 6. Message Logs table
+    await sql`
+      CREATE TABLE IF NOT EXISTS message_logs (
+        "id" TEXT PRIMARY KEY,
+        "type" TEXT NOT NULL,
+        "studentId" TEXT NOT NULL,
+        "studentName" TEXT NOT NULL,
+        "recipientPhone" TEXT NOT NULL,
+        "message" TEXT NOT NULL,
+        "status" TEXT NOT NULL,
+        "error" TEXT,
+        "timestamp" TEXT NOT NULL
       )
     `;
 
@@ -497,6 +512,7 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
               pdfBuffer,
               `Application_Form_${student.name.replace(/\s+/g, "_")}.pdf`
             );
+            await logMessage({ type: "welcome", studentId: studentId || student.id, studentName: studentName, recipientPhone: phone, message: messageText + " [+ Application Form PDF]", status: "sent" });
             return { success: true, automated: true };
           } catch (pdfErr) {
             console.error("Failed to generate and send welcome registration PDF, falling back to text:", pdfErr);
@@ -505,6 +521,8 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
       }
 
       await ws.sendWhatsAppTextMessage(phone, messageText);
+      const msgType = status === "Welcome" ? "welcome" : "attendance";
+      await logMessage({ type: msgType as MessageType, studentId: studentId || "", studentName, recipientPhone: phone, message: messageText, status: "sent" });
       return { success: true, automated: true };
     }
 
@@ -591,7 +609,440 @@ export const sendWhatsAppReceipt = createServerFn({ method: "POST" })
       pdfBuffer,
       `Receipt_${f.id.slice(0, 8).toUpperCase()}.pdf`
     );
+    await logMessage({
+      type: "fee_receipt",
+      studentId: s.id,
+      studentName: s.name,
+      recipientPhone: parentMobile,
+      message: textMessage + " [+ Fee Receipt PDF]",
+      status: "sent"
+    });
 
     return { success: true };
   });
 
+// ────────────────────────────────────────────────────────────────
+// Message Logging
+// ────────────────────────────────────────────────────────────────
+
+async function logMessage(data: {
+  type: MessageType;
+  studentId: string;
+  studentName: string;
+  recipientPhone: string;
+  message: string;
+  status: "sent" | "failed";
+  error?: string;
+}) {
+  const sql = await getSql();
+  if (!sql) return;
+  const id = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+  try {
+    await sql`
+      INSERT INTO message_logs ("id", "type", "studentId", "studentName", "recipientPhone", "message", "status", "error", "timestamp")
+      VALUES (${id}, ${data.type}, ${data.studentId}, ${data.studentName}, ${data.recipientPhone}, ${data.message}, ${data.status}, ${data.error || null}, ${new Date().toISOString()})
+    `;
+  } catch (err) {
+    console.error("[MessageLog] Failed to log message:", err);
+  }
+}
+
+export const getMessageLogs = createServerFn({ method: "GET" })
+  .validator((data: { limit?: number; offset?: number; type?: string; status?: string }) => data)
+  .handler(async ({ data }) => {
+    const sql = await getSql();
+    if (!sql) return { logs: [] as MessageLog[], total: 0 };
+
+    const limit = data.limit || 50;
+    const offset = data.offset || 0;
+
+    let logs: any[];
+    let countResult: any[];
+
+    if (data.type && data.status) {
+      logs = await sql`SELECT * FROM message_logs WHERE "type" = ${data.type} AND "status" = ${data.status} ORDER BY "timestamp" DESC LIMIT ${limit} OFFSET ${offset}`;
+      countResult = await sql`SELECT COUNT(*) as count FROM message_logs WHERE "type" = ${data.type} AND "status" = ${data.status}`;
+    } else if (data.type) {
+      logs = await sql`SELECT * FROM message_logs WHERE "type" = ${data.type} ORDER BY "timestamp" DESC LIMIT ${limit} OFFSET ${offset}`;
+      countResult = await sql`SELECT COUNT(*) as count FROM message_logs WHERE "type" = ${data.type}`;
+    } else if (data.status) {
+      logs = await sql`SELECT * FROM message_logs WHERE "status" = ${data.status} ORDER BY "timestamp" DESC LIMIT ${limit} OFFSET ${offset}`;
+      countResult = await sql`SELECT COUNT(*) as count FROM message_logs WHERE "status" = ${data.status}`;
+    } else {
+      logs = await sql`SELECT * FROM message_logs ORDER BY "timestamp" DESC LIMIT ${limit} OFFSET ${offset}`;
+      countResult = await sql`SELECT COUNT(*) as count FROM message_logs`;
+    }
+
+    return {
+      logs: logs.map((r: any) => ({
+        id: r.id,
+        type: r.type as MessageType,
+        studentId: r.studentId,
+        studentName: r.studentName,
+        recipientPhone: r.recipientPhone,
+        message: r.message,
+        status: r.status as "sent" | "failed",
+        error: r.error || undefined,
+        timestamp: r.timestamp,
+      })),
+      total: Number(countResult[0]?.count || 0),
+    };
+  });
+
+export const getMessageLogStats = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const sql = await getSql();
+    if (!sql) return { total: 0, sent: 0, failed: 0, today: 0, byType: {} as Record<string, number> };
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    const totalR = await sql`SELECT COUNT(*) as c FROM message_logs`;
+    const sentR = await sql`SELECT COUNT(*) as c FROM message_logs WHERE "status" = 'sent'`;
+    const failedR = await sql`SELECT COUNT(*) as c FROM message_logs WHERE "status" = 'failed'`;
+    const todayR = await sql`SELECT COUNT(*) as c FROM message_logs WHERE "timestamp" >= ${today}`;
+    const byTypeR = await sql`SELECT "type", COUNT(*) as c FROM message_logs GROUP BY "type"`;
+
+    const byType: Record<string, number> = {};
+    byTypeR.forEach((r: any) => { byType[r.type] = Number(r.c); });
+
+    return {
+      total: Number(totalR[0]?.c || 0),
+      sent: Number(sentR[0]?.c || 0),
+      failed: Number(failedR[0]?.c || 0),
+      today: Number(todayR[0]?.c || 0),
+      byType,
+    };
+  });
+
+// ────────────────────────────────────────────────────────────────
+// Bulk Attendance Alerts
+// ────────────────────────────────────────────────────────────────
+
+export const sendBulkAttendanceAlerts = createServerFn({ method: "POST" })
+  .validator((data: { date: string; standard?: string }) => data)
+  .handler(async ({ data }) => {
+    const sql = await getSql();
+    if (!sql) throw new Error("Database not connected");
+
+    const settings = await getDbSettings();
+    if (!settings) throw new Error("Settings not configured");
+
+    const provider = settings.whatsappProvider || "manual";
+    if (provider === "manual") return { success: true, manual: true, sent: 0 };
+
+    const ws = await getWhatsAppService();
+    if (!ws) throw new Error("WhatsApp service not available");
+
+    // Get attendance records for this date
+    let attendanceRecords: any[];
+    if (data.standard && data.standard !== "all") {
+      attendanceRecords = await sql`
+        SELECT a.*, s.name, s."fatherMobile", s."motherMobile", s.standard, s.section, s.id as sid
+        FROM attendance a
+        JOIN students s ON a."studentId" = s.id
+        WHERE a.date = ${data.date} AND s.standard = ${data.standard}
+      `;
+    } else {
+      attendanceRecords = await sql`
+        SELECT a.*, s.name, s."fatherMobile", s."motherMobile", s.standard, s.section, s.id as sid
+        FROM attendance a
+        JOIN students s ON a."studentId" = s.id
+        WHERE a.date = ${data.date}
+      `;
+    }
+
+    let sentCount = 0;
+    let failedCount = 0;
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+    const dateStr = new Date(data.date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+
+    for (const rec of attendanceRecords) {
+      const parentMobile = rec.fatherMobile || rec.motherMobile;
+      if (!parentMobile) continue;
+
+      let template = "";
+      if (rec.status === "Present") {
+        template = settings.whatsappTemplatePresent || "Dear Parent, your child [student_name] was marked ✅ PRESENT at Vishwa Tuition Center today ([date]) at [time]. Regards, Vishwa Tuition Center.";
+      } else if (rec.status === "Absent") {
+        template = settings.whatsappTemplateAbsent || "Dear Parent, your child [student_name] was marked ❌ ABSENT from Vishwa Tuition Center today ([date]). Please check with them. Regards, Vishwa Tuition Center.";
+      } else if (rec.status === "Late") {
+        template = settings.whatsappTemplateLate || "Dear Parent, your child [student_name] arrived ⏰ LATE at Vishwa Tuition Center today ([date]) at [time]. Regards, Vishwa Tuition Center.";
+      } else {
+        continue; // Skip Holiday
+      }
+
+      const messageText = template
+        .replace("[student_name]", rec.name)
+        .replace("[date]", dateStr)
+        .replace("[time]", timeStr);
+
+      try {
+        if (provider === "baileys") {
+          await ws.sendWhatsAppTextMessage(parentMobile, messageText);
+        }
+        await logMessage({
+          type: "attendance",
+          studentId: rec.sid,
+          studentName: rec.name,
+          recipientPhone: parentMobile,
+          message: messageText,
+          status: "sent",
+        });
+        sentCount++;
+      } catch (err: any) {
+        await logMessage({
+          type: "attendance",
+          studentId: rec.sid,
+          studentName: rec.name,
+          recipientPhone: parentMobile,
+          message: messageText,
+          status: "failed",
+          error: err.message || String(err),
+        });
+        failedCount++;
+      }
+
+      // Small delay between messages to avoid rate limiting
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+
+    return { success: true, sent: sentCount, failed: failedCount };
+  });
+
+// ────────────────────────────────────────────────────────────────
+// Monthly Fee Reminders
+// ────────────────────────────────────────────────────────────────
+
+export const sendMonthlyFeeReminders = createServerFn({ method: "POST" })
+  .validator((data: { month: string }) => data)
+  .handler(async ({ data }) => {
+    const sql = await getSql();
+    if (!sql) throw new Error("Database not connected");
+
+    const settings = await getDbSettings();
+    if (!settings) throw new Error("Settings not configured");
+
+    const provider = settings.whatsappProvider || "manual";
+    if (provider === "manual") return { success: true, manual: true, sent: 0 };
+
+    const ws = await getWhatsAppService();
+    if (!ws) throw new Error("WhatsApp service not available");
+
+    // Get students who have NOT paid for this month or have pending/partial fees
+    const students = await sql`SELECT * FROM students`;
+    const paidFees = await sql`SELECT * FROM fees WHERE month = ${data.month} AND status = 'Paid'`;
+    const paidStudentIds = new Set(paidFees.map((f: any) => f.studentId));
+
+    const unpaidStudents = students.filter((s: any) => !paidStudentIds.has(s.id));
+
+    let sentCount = 0;
+    let failedCount = 0;
+
+    const template = settings.whatsappTemplateFeeReminder ||
+      "Dear Parent, this is a reminder that the tuition fee of Rs. [amount] for [student_name] (Std: [standard]) for [month] is pending. Please arrange payment at your earliest convenience. Regards, Vishwa Tuition Center.";
+
+    const monthLabel = new Date(data.month + "-01").toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+
+    for (const s of unpaidStudents) {
+      const parentMobile = s.fatherMobile || s.motherMobile;
+      if (!parentMobile) continue;
+
+      const messageText = template
+        .replace("[student_name]", s.name)
+        .replace("[amount]", String(s.monthlyFees))
+        .replace("[standard]", s.standard)
+        .replace("[month]", monthLabel);
+
+      try {
+        if (provider === "baileys") {
+          await ws.sendWhatsAppTextMessage(parentMobile, messageText);
+        }
+        await logMessage({
+          type: "fee_reminder",
+          studentId: s.id,
+          studentName: s.name,
+          recipientPhone: parentMobile,
+          message: messageText,
+          status: "sent",
+        });
+        sentCount++;
+      } catch (err: any) {
+        await logMessage({
+          type: "fee_reminder",
+          studentId: s.id,
+          studentName: s.name,
+          recipientPhone: parentMobile,
+          message: messageText,
+          status: "failed",
+          error: err.message || String(err),
+        });
+        failedCount++;
+      }
+
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+
+    return { success: true, sent: sentCount, failed: failedCount, total: unpaidStudents.length };
+  });
+
+// ────────────────────────────────────────────────────────────────
+// Fee Overdue Reminders
+// ────────────────────────────────────────────────────────────────
+
+export const sendFeeOverdueReminders = createServerFn({ method: "POST" })
+  .validator((data: { month: string }) => data)
+  .handler(async ({ data }) => {
+    const sql = await getSql();
+    if (!sql) throw new Error("Database not connected");
+
+    const settings = await getDbSettings();
+    if (!settings) throw new Error("Settings not configured");
+
+    const provider = settings.whatsappProvider || "manual";
+    if (provider === "manual") return { success: true, manual: true, sent: 0 };
+
+    const ws = await getWhatsAppService();
+    if (!ws) throw new Error("WhatsApp service not available");
+
+    // Get students with pending/partial fees for the given month
+    const overdueFees = await sql`
+      SELECT f.*, s.name, s."fatherMobile", s."motherMobile", s.standard
+      FROM fees f
+      JOIN students s ON f."studentId" = s.id
+      WHERE f.month = ${data.month} AND f.status != 'Paid'
+    `;
+
+    // Also include students with no fee record at all
+    const allStudents = await sql`SELECT * FROM students`;
+    const feeStudentIds = await sql`SELECT DISTINCT "studentId" FROM fees WHERE month = ${data.month}`;
+    const hasFeesIds = new Set(feeStudentIds.map((r: any) => r.studentId));
+    const noRecordStudents = allStudents.filter((s: any) => !hasFeesIds.has(s.id));
+
+    let sentCount = 0;
+    let failedCount = 0;
+
+    const template = settings.whatsappTemplateFeeOverdue ||
+      "Dear Parent, the tuition fee of Rs. [amount] for [student_name] for [month] is overdue. Kindly clear the dues to avoid any inconvenience. Regards, Vishwa Tuition Center.";
+
+    const monthLabel = new Date(data.month + "-01").toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+
+    const allOverdue = [
+      ...overdueFees.map((f: any) => ({ id: f.studentId, name: f.name, fatherMobile: f.fatherMobile, motherMobile: f.motherMobile, monthlyFees: f.amount, standard: f.standard })),
+      ...noRecordStudents.map((s: any) => ({ id: s.id, name: s.name, fatherMobile: s.fatherMobile, motherMobile: s.motherMobile, monthlyFees: s.monthlyFees, standard: s.standard })),
+    ];
+
+    for (const s of allOverdue) {
+      const parentMobile = s.fatherMobile || s.motherMobile;
+      if (!parentMobile) continue;
+
+      const messageText = template
+        .replace("[student_name]", s.name)
+        .replace("[amount]", String(s.monthlyFees))
+        .replace("[month]", monthLabel);
+
+      try {
+        if (provider === "baileys") {
+          await ws.sendWhatsAppTextMessage(parentMobile, messageText);
+        }
+        await logMessage({
+          type: "fee_overdue",
+          studentId: s.id,
+          studentName: s.name,
+          recipientPhone: parentMobile,
+          message: messageText,
+          status: "sent",
+        });
+        sentCount++;
+      } catch (err: any) {
+        await logMessage({
+          type: "fee_overdue",
+          studentId: s.id,
+          studentName: s.name,
+          recipientPhone: parentMobile,
+          message: messageText,
+          status: "failed",
+          error: err.message || String(err),
+        });
+        failedCount++;
+      }
+
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+
+    return { success: true, sent: sentCount, failed: failedCount };
+  });
+
+// ────────────────────────────────────────────────────────────────
+// Birthday Wishes
+// ────────────────────────────────────────────────────────────────
+
+export const checkAndSendBirthdayWishes = createServerFn({ method: "POST" })
+  .handler(async () => {
+    const sql = await getSql();
+    if (!sql) throw new Error("Database not connected");
+
+    const settings = await getDbSettings();
+    if (!settings) throw new Error("Settings not configured");
+
+    const provider = settings.whatsappProvider || "manual";
+    if (provider === "manual") return { success: true, manual: true, sent: 0 };
+
+    const ws = await getWhatsAppService();
+    if (!ws) throw new Error("WhatsApp service not available");
+
+    const today = new Date();
+    const todayMD = `${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    // Find students whose DOB matches today's month-day
+    const allStudents = await sql`SELECT * FROM students`;
+    const birthdayStudents = allStudents.filter((s: any) => {
+      if (!s.dob) return false;
+      const dob = new Date(s.dob);
+      const dobMD = `${String(dob.getMonth() + 1).padStart(2, "0")}-${String(dob.getDate()).padStart(2, "0")}`;
+      return dobMD === todayMD;
+    });
+
+    let sentCount = 0;
+    let failedCount = 0;
+
+    const template = settings.whatsappTemplateBirthday ||
+      "Dear Parent, Vishwa Tuition Center wishes [student_name] a very Happy Birthday! 🎉🎂 May this year bring them great success. Regards, Vishwa Tuition Center.";
+
+    for (const s of birthdayStudents) {
+      const parentMobile = s.fatherMobile || s.motherMobile;
+      if (!parentMobile) continue;
+
+      const messageText = template.replace("[student_name]", s.name);
+
+      try {
+        if (provider === "baileys") {
+          await ws.sendWhatsAppTextMessage(parentMobile, messageText);
+        }
+        await logMessage({
+          type: "birthday",
+          studentId: s.id,
+          studentName: s.name,
+          recipientPhone: parentMobile,
+          message: messageText,
+          status: "sent",
+        });
+        sentCount++;
+      } catch (err: any) {
+        await logMessage({
+          type: "birthday",
+          studentId: s.id,
+          studentName: s.name,
+          recipientPhone: parentMobile,
+          message: messageText,
+          status: "failed",
+          error: err.message || String(err),
+        });
+        failedCount++;
+      }
+
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+
+    return { success: true, sent: sentCount, failed: failedCount, birthdaysFound: birthdayStudents.length };
+  });
