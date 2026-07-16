@@ -192,12 +192,33 @@ export const syncDbStudents = createServerFn({ method: "POST" })
   .handler(async ({ data: students }) => {
     const sql = await getSql();
     if (!sql) return;
+
+    const sanitized = students.map(s => ({
+      id: s.id || "",
+      photo: s.photo === undefined ? null : s.photo,
+      name: s.name || "",
+      gender: s.gender || "Male",
+      dob: s.dob || "",
+      school: s.school || "",
+      standard: s.standard || "8th",
+      section: s.section || "A",
+      parentName: s.parentName || "",
+      fatherMobile: s.fatherMobile || "",
+      motherMobile: s.motherMobile || "",
+      address: s.address || "",
+      joiningDate: s.joiningDate || "",
+      monthlyFees: s.monthlyFees === undefined ? 0 : Number(s.monthlyFees),
+      admissionFees: s.admissionFees === undefined ? 0 : Number(s.admissionFees),
+      notes: s.notes === undefined ? null : s.notes,
+      createdAt: s.createdAt || new Date().toISOString()
+    }));
+
     try {
       await sql.begin(async (sql: any) => {
         await sql`DELETE FROM students`;
-        if (students.length > 0) {
+        if (sanitized.length > 0) {
           await sql`
-            INSERT INTO students ${(sql as any)(students, ["id", "photo", "name", "gender", "dob", "school", "standard", "section", "parentName", "fatherMobile", "motherMobile", "address", "joiningDate", "monthlyFees", "admissionFees", "notes", "createdAt"])}
+            INSERT INTO students ${(sql as any)(sanitized, ["id", "photo", "name", "gender", "dob", "school", "standard", "section", "parentName", "fatherMobile", "motherMobile", "address", "joiningDate", "monthlyFees", "admissionFees", "notes", "createdAt"])}
           `;
         }
       });
@@ -232,12 +253,21 @@ export const syncDbAttendance = createServerFn({ method: "POST" })
   .handler(async ({ data: attendance }) => {
     const sql = await getSql();
     if (!sql) return;
+
+    const sanitized = attendance.map(a => ({
+      id: a.id || "",
+      studentId: a.studentId || "",
+      date: a.date || "",
+      status: a.status || "Present",
+      remarks: a.remarks === undefined ? null : a.remarks
+    }));
+
     try {
       await sql.begin(async (sql: any) => {
         await sql`DELETE FROM attendance`;
-        if (attendance.length > 0) {
+        if (sanitized.length > 0) {
           await sql`
-            INSERT INTO attendance ${(sql as any)(attendance, ["id", "studentId", "date", "status", "remarks"])}
+            INSERT INTO attendance ${(sql as any)(sanitized, ["id", "studentId", "date", "status", "remarks"])}
           `;
         }
       });
@@ -274,12 +304,23 @@ export const syncDbFees = createServerFn({ method: "POST" })
   .handler(async ({ data: fees }) => {
     const sql = await getSql();
     if (!sql) return;
+
+    const sanitized = fees.map(f => ({
+      id: f.id || "",
+      studentId: f.studentId || "",
+      month: f.month || "",
+      amount: f.amount === undefined ? 0 : Number(f.amount),
+      paidAmount: f.paidAmount === undefined ? 0 : Number(f.paidAmount),
+      paidDate: f.paidDate === undefined ? null : f.paidDate,
+      status: f.status || "Pending"
+    }));
+
     try {
       await sql.begin(async (sql: any) => {
         await sql`DELETE FROM fees`;
-        if (fees.length > 0) {
+        if (sanitized.length > 0) {
           await sql`
-            INSERT INTO fees ${(sql as any)(fees, ["id", "studentId", "month", "amount", "paidAmount", "paidDate", "status"])}
+            INSERT INTO fees ${(sql as any)(sanitized, ["id", "studentId", "month", "amount", "paidAmount", "paidDate", "status"])}
           `;
         }
       });
@@ -319,12 +360,26 @@ export const syncDbMaterials = createServerFn({ method: "POST" })
   .handler(async ({ data: materials }) => {
     const sql = await getSql();
     if (!sql) return;
+
+    const sanitized = materials.map(m => ({
+      id: m.id || "",
+      standard: m.standard || "8th",
+      type: m.type || "Notes",
+      title: m.title || "",
+      fileName: m.fileName || "",
+      fileType: m.fileType || "",
+      size: m.size === undefined ? 0 : Number(m.size),
+      driveUrl: m.driveUrl === undefined ? "" : m.driveUrl,
+      driveFileId: m.driveFileId === undefined ? "" : m.driveFileId,
+      createdAt: m.createdAt || new Date().toISOString()
+    }));
+
     try {
       await sql.begin(async (sql: any) => {
         await sql`DELETE FROM materials`;
-        if (materials.length > 0) {
+        if (sanitized.length > 0) {
           await sql`
-            INSERT INTO materials ${(sql as any)(materials, ["id", "standard", "type", "title", "fileName", "fileType", "size", "driveUrl", "driveFileId", "createdAt"])}
+            INSERT INTO materials ${(sql as any)(sanitized, ["id", "standard", "type", "title", "fileName", "fileType", "size", "driveUrl", "driveFileId", "createdAt"])}
           `;
         }
       });
