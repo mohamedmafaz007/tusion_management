@@ -1,0 +1,1 @@
+var e=[`6th`,`7th`,`8th`,`9th`,`10th`,`11th`,`12th`],t=[`Notes`,`Assignments`,`Question Papers`,`Model Papers`,`Worksheets`,`Important Questions`,`Previous Year Papers`];export{e as n,t};
