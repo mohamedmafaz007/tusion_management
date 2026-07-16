@@ -521,9 +521,13 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
               }
             });
 
+            // Send the welcome greeting text first
+            await ws.sendWhatsAppTextMessage(phone, messageText);
+
+            // Send the filled PDF application form second
             await ws.sendWhatsAppMessageWithPDF(
               phone,
-              messageText,
+              "Admission Application Form PDF",
               pdfBuffer,
               `Application_Form_${student.name.replace(/\s+/g, "_")}.pdf`
             );
@@ -618,9 +622,13 @@ export const sendWhatsAppReceipt = createServerFn({ method: "POST" })
       `Receipt ID: ${f.id.slice(0, 8).toUpperCase()}\n\n` +
       `Thank you,\n${settings.instituteName || "Vishwa Tuition Center"}`;
 
+    // Send the payment summary text first
+    await ws.sendWhatsAppTextMessage(parentMobile, textMessage);
+
+    // Send the payment receipt PDF second
     await ws.sendWhatsAppMessageWithPDF(
       parentMobile,
-      textMessage,
+      "Fee Payment Receipt PDF",
       pdfBuffer,
       `Receipt_${f.id.slice(0, 8).toUpperCase()}.pdf`
     );
