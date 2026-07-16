@@ -426,6 +426,7 @@ export const syncDbMaterials = createServerFn({ method: "POST" })
   });
 
 const DEFAULT_SERVER_SETTINGS = {
+  standards: ["6th", "7th", "8th", "9th", "10th", "11th", "12th"],
   instituteName: "Vishwa Tuition Center",
   teacherName: "Prof. Anita Sharma",
   contact: "+91 98765 43210",
@@ -480,6 +481,7 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
     studentName: string; 
     status: string; 
     studentId?: string;
+    date?: string;
   }) => data)
   .handler(async ({ data }) => {
     const settings = await getDbSettings();
@@ -490,7 +492,7 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
       return { success: true, manual: true };
     }
 
-    const { recipientPhone, studentName, status, studentId } = data;
+    const { recipientPhone, studentName, status, studentId, date } = data;
     
     let template = "";
     if (status === "Present") {
@@ -504,10 +506,35 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
     if (!template) {
       template = status === "Welcome"
         ? `Dear Parent, thank you for registering [student_name] at Vishwa Tuition Center.`
-        : `Dear Parent, your child [student_name] was marked ${status} today.`;
+        : `Dear Parent, your child [student_name] was marked [status] today on [date] at [time].`;
     }
 
-    const messageText = template.replace("[student_name]", studentName);
+    // Format the date/time
+    let formattedDate = "";
+    if (date) {
+      // YYYY-MM-DD -> DD/MM/YYYY
+      formattedDate = date.split("-").reverse().join("/");
+    } else {
+      const d = new Date();
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      formattedDate = `${day}/${month}/${year}`;
+    }
+
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const formattedTime = `${hours}:${minutes} ${ampm}`;
+
+    const messageText = template
+      .replace("[student_name]", studentName)
+      .replace("[status]", status)
+      .replace("[date]", formattedDate)
+      .replace("[time]", formattedTime);
 
     // Clean phone number: keep only digits
     let phone = recipientPhone.replace(/[\s\-\(\)\+]/g, "");
@@ -826,6 +853,33 @@ export const getMessageLogStats = createServerFn({ method: "GET" })
       today: Number(todayR[0]?.c || 0),
       byType,
     };
+  });
+
+export const deleteDbMessageLog = createServerFn({ method: "POST" })
+  .validator((id: string) => id)
+  .handler(async ({ data: id }) => {
+    const sql = await getSql();
+    if (!sql) return { success: false };
+    try {
+      await sql`DELETE FROM message_logs WHERE "id" = ${id}`;
+      return { success: true };
+    } catch (e) {
+      console.error("Failed to delete message log from DB:", e);
+      throw e;
+    }
+  });
+
+export const clearAllDbMessageLogs = createServerFn({ method: "POST" })
+  .handler(async () => {
+    const sql = await getSql();
+    if (!sql) return { success: false };
+    try {
+      await sql`DELETE FROM message_logs`;
+      return { success: true };
+    } catch (e) {
+      console.error("Failed to clear message logs from DB:", e);
+      throw e;
+    }
   });
 
 // ────────────────────────────────────────────────────────────────

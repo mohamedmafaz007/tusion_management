@@ -92,31 +92,6 @@ function MaterialsPage() {
   const [driveUrl, setDriveUrl] = useState("");
   const [driveFileType, setDriveFileType] = useState("pdf");
   const [isUploading, setIsUploading] = useState(false);
-  const [isLoadingList, setIsLoadingList] = useState(false);
-
-  useEffect(() => {
-    const fetchMaterials = async () => {
-      setIsLoadingList(true);
-      try {
-        const configured = await isDbConfigured();
-        if (!configured) {
-          setIsLoadingList(false);
-          return;
-        }
-
-        const data = await getDbMaterials();
-        if (data && Array.isArray(data)) {
-          setMaterialsState(data);
-        }
-      } catch (err) {
-        console.error("Failed to load study materials from Neon database:", err);
-      } finally {
-        setIsLoadingList(false);
-      }
-    };
-    fetchMaterials();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handlePreview = (m: typeof materials[0]) => {
     if (m.driveFileId) {

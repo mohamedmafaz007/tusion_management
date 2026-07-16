@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { CalendarIcon, CheckCheck, XCircle, Users, Send } from "lucide-react";
+import { CalendarIcon, CheckCheck, XCircle, Users, Send, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -109,7 +109,21 @@ function AttendancePage() {
       ? settings.whatsappTemplatePresent
       : settings.whatsappTemplateAbsent;
       
-    const messageText = (template || `Dear Parent, your child [student_name] was marked ${status} today.`).replace("[student_name]", s.name);
+    // Format the date/time on frontend
+    const formattedDate = dateKey.split("-").reverse().join("/"); // YYYY-MM-DD -> DD/MM/YYYY
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const formattedTime = `${hours}:${minutes} ${ampm}`;
+
+    const messageText = (template || `Dear Parent, your child [student_name] was marked [status] today on [date] at [time].`)
+      .replace("[student_name]", s.name)
+      .replace("[status]", status)
+      .replace("[date]", formattedDate)
+      .replace("[time]", formattedTime);
 
     const parentMobile = s.fatherMobile || s.motherMobile;
     if (!parentMobile) {
@@ -132,7 +146,8 @@ function AttendancePage() {
           data: {
             recipientPhone: parentMobile,
             studentName: s.name,
-            status: status
+            status: status,
+            date: dateKey // Pass the date of attendance to the server
           }
         });
         if (res.success) {
@@ -189,7 +204,15 @@ function AttendancePage() {
               onClick={handleSaveAndSendBulkAlerts}
               disabled={isSendingAlerts || filtered.length === 0}
             >
-              <Send className="mr-2 h-4 w-4" /> Save & Send Alerts
+              {isSendingAlerts ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" /> Save & Send Alerts
+                </>
+              )}
             </Button>
           </div>
         }

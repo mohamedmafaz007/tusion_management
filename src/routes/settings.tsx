@@ -43,6 +43,21 @@ function SettingsPage() {
   const [baileysQr, setBaileysQr] = useState<string>("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [newStandard, setNewStandard] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleAddStandard = () => {
+    const trimmed = newStandard.trim();
+    if (!trimmed) return;
+    const current = draft.standards || ["6th", "7th", "8th", "9th", "10th", "11th", "12th"];
+    if (current.includes(trimmed)) {
+      toast.error("Standard already exists!");
+      return;
+    }
+    setDraft({ ...draft, standards: [...current, trimmed] });
+    setNewStandard("");
+    toast.success(`Standard "${trimmed}" added to changes`);
+  };
 
   // Sync draft when settings load
   useEffect(() => {
@@ -97,9 +112,16 @@ function SettingsPage() {
     }
   };
 
-  const save = () => {
-    setSettingsState(draft);
-    toast.success("Settings saved");
+  const save = async () => {
+    setIsSaving(true);
+    try {
+      await setSettingsState(draft);
+      toast.success("Settings saved");
+    } catch (err: any) {
+      toast.error(`Failed to save settings: ${err.message || err}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const reset = () => {
@@ -123,9 +145,17 @@ function SettingsPage() {
         description="Institute details, appearance, and preferences."
         actions={
           <>
-            <Button variant="outline" className="rounded-xl" onClick={reset}>Reset</Button>
-            <Button className="rounded-xl gradient-brand shadow-glow" onClick={save}>
-              <Save className="mr-2 h-4 w-4" /> Save Changes
+            <Button variant="outline" className="rounded-xl" disabled={isSaving} onClick={reset}>Reset</Button>
+            <Button className="rounded-xl gradient-brand shadow-glow" disabled={isSaving} onClick={save}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" /> Save Changes
+                </>
+              )}
             </Button>
           </>
         }
@@ -352,6 +382,54 @@ function SettingsPage() {
                 Remove
               </Button>
             )}
+          </div>
+        </div>
+
+        {/* Manage Standards */}
+        <div className="glass rounded-2xl p-6 lg:col-span-3">
+          <h3 className="mb-1 font-semibold text-lg">Manage Standards (Classes)</h3>
+          <p className="text-xs text-muted-foreground mb-4">
+            Add or remove standards/classes. These dynamic classes will be reflected everywhere in the tuition management system (Registry, Attendance, Fees, Study Materials).
+          </p>
+
+          <div className="flex flex-wrap gap-2.5 mb-4 p-4 border border-border/50 rounded-2xl bg-secondary/5 min-h-[56px] items-center">
+            {(draft.standards || ["6th", "7th", "8th", "9th", "10th", "11th", "12th"]).map((std) => (
+              <span
+                key={std}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20 text-xs font-semibold"
+              >
+                {std}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = draft.standards || ["6th", "7th", "8th", "9th", "10th", "11th", "12th"];
+                    const next = current.filter((s) => s !== std);
+                    setDraft({ ...draft, standards: next });
+                  }}
+                  className="text-primary/70 hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition font-black leading-none text-[14px]"
+                  title={`Delete ${std} Standard`}
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
+          </div>
+
+          <div className="flex gap-2 max-w-sm">
+            <Input
+              placeholder="e.g. 5th, JEE, NEET"
+              value={newStandard}
+              onChange={(e) => setNewStandard(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddStandard();
+                }
+              }}
+            />
+            <Button variant="outline" className="rounded-xl shrink-0" onClick={handleAddStandard}>
+              Add Standard
+            </Button>
           </div>
         </div>
 

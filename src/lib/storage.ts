@@ -54,6 +54,7 @@ export const setMaterials = (v: Material[]) => write(KEYS.materials, v);
 
 // Settings
 export const DEFAULT_SETTINGS: AppSettings = {
+  standards: ["6th", "7th", "8th", "9th", "10th", "11th", "12th"],
   instituteName: "Vishwa Tuition Center",
   teacherName: "Prof. Anita Sharma",
   contact: "+91 98765 43210",

@@ -12,7 +12,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings as SettingsIcon,
-  HelpCircle
+  HelpCircle,
+  Trash2,
+  Loader2
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -32,7 +34,9 @@ import {
   sendMonthlyFeeReminders, 
   sendFeeOverdueReminders, 
   checkAndSendBirthdayWishes,
-  getBaileysStatus
+  getBaileysStatus,
+  deleteDbMessageLog,
+  clearAllDbMessageLogs
 } from "@/lib/db";
 import type { MessageLog, MessageType } from "@/lib/types";
 
@@ -143,6 +147,38 @@ function MessageLogsPage() {
     fetchStatsAndStatus();
     fetchLogs();
     toast.success("Logs and stats updated!");
+  };
+
+  const handleDeleteLog = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this message log?")) return;
+    try {
+      const res = await deleteDbMessageLog({ data: id });
+      if (res.success) {
+        toast.success("Message log deleted");
+        fetchStatsAndStatus();
+        fetchLogs();
+      } else {
+        toast.error("Failed to delete message log");
+      }
+    } catch (err: any) {
+      toast.error(`Error: ${err.message || err}`);
+    }
+  };
+
+  const handleClearAllLogs = async () => {
+    if (!confirm("Are you sure you want to clear ALL message logs? This cannot be undone.")) return;
+    try {
+      const res = await clearAllDbMessageLogs();
+      if (res.success) {
+        toast.success("All message logs cleared");
+        fetchStatsAndStatus();
+        fetchLogs();
+      } else {
+        toast.error("Failed to clear message logs");
+      }
+    } catch (err: any) {
+      toast.error(`Error: ${err.message || err}`);
+    }
   };
 
   // Triggers
@@ -316,7 +352,13 @@ function MessageLogsPage() {
                 className="flex-1 rounded-xl text-xs"
                 size="sm"
               >
-                Send Reminders
+                {isSendingReminders ? (
+                  <>
+                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Sending...
+                  </>
+                ) : (
+                  "Send Reminders"
+                )}
               </Button>
               <Button 
                 variant="outline"
@@ -325,7 +367,13 @@ function MessageLogsPage() {
                 className="flex-1 rounded-xl text-xs text-red-500 hover:text-red-600 border-red-500/20 hover:bg-red-50 dark:hover:bg-red-950/20"
                 size="sm"
               >
-                Send Overdue
+                {isSendingOverdue ? (
+                  <>
+                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Sending...
+                  </>
+                ) : (
+                  "Send Overdue"
+                )}
               </Button>
             </div>
           </div>
@@ -349,7 +397,13 @@ function MessageLogsPage() {
                 className="w-full rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs"
                 size="sm"
               >
-                Trigger Birthdays Wish
+                {isSendingBirthdays ? (
+                  <>
+                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Sending...
+                  </>
+                ) : (
+                  "Trigger Birthdays Wish"
+                )}
               </Button>
             </div>
           </div>
@@ -376,7 +430,19 @@ function MessageLogsPage() {
       <div className="glass rounded-2xl border border-border/50 overflow-hidden">
         {/* Table header filters */}
         <div className="flex flex-wrap items-center gap-3 p-4 border-b border-border/40 bg-accent/10">
-          <span className="text-sm font-semibold">Message Log History</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold">Message Log History</span>
+            {logs.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-8 rounded-lg text-xs"
+                onClick={handleClearAllLogs}
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear All Logs
+              </Button>
+            )}
+          </div>
           
           <div className="flex flex-wrap gap-2 ml-auto">
             <Select value={filterType} onValueChange={(v) => { setFilterType(v); setPage(0); }}>
@@ -418,16 +484,17 @@ function MessageLogsPage() {
                 <th className="p-3">Recipient Mobile</th>
                 <th className="p-3">Message Preview</th>
                 <th className="p-3 text-right">Status</th>
+                <th className="p-3 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
               {isRefreshing && logs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-muted-foreground">Loading logs...</td>
+                  <td colSpan={7} className="p-10 text-center text-muted-foreground">Loading logs...</td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-muted-foreground">No matching logs found.</td>
+                  <td colSpan={7} className="p-10 text-center text-muted-foreground">No matching logs found.</td>
                 </tr>
               ) : (
                 logs.map((log) => {
@@ -465,6 +532,17 @@ function MessageLogsPage() {
                             <AlertCircle className="h-3.5 w-3.5" /> Failed
                           </span>
                         )}
+                      </td>
+                      <td className="p-3 whitespace-nowrap text-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg animate-fade-in"
+                          onClick={() => handleDeleteLog(log.id)}
+                          title="Delete Log"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </td>
                     </tr>
                   );

@@ -12,12 +12,13 @@ import {
   setSettings,
   setStudents,
 } from "./storage";
-import type {
-  AppSettings,
-  AttendanceRecord,
-  FeePayment,
-  Material,
-  Student,
+import {
+  STANDARDS,
+  type AppSettings,
+  type AttendanceRecord,
+  type FeePayment,
+  type Material,
+  type Student,
 } from "./types";
 
 import {
@@ -120,4 +121,14 @@ export const useAttendance = () =>
   useSynced<AttendanceRecord[]>(getAttendance, setAttendance, "attendance");
 export const useFees = () => useSynced<FeePayment[]>(getFees, setFees, "fees");
 export const useMaterials = () => useSynced<Material[]>(getMaterials, setMaterials, "materials");
-export const useSettings = () => useSynced<AppSettings>(getSettings, setSettings, "settings");
+export const useSettings = () => {
+  const [settings, setSettingsState] = useSynced<AppSettings>(getSettings, setSettings, "settings");
+
+  if (settings && settings.standards && Array.isArray(settings.standards) && settings.standards.length > 0) {
+    STANDARDS.splice(0, STANDARDS.length, ...settings.standards);
+  } else {
+    STANDARDS.splice(0, STANDARDS.length, "6th", "7th", "8th", "9th", "10th", "11th", "12th");
+  }
+
+  return [settings, setSettingsState] as const;
+};

@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRef, useState } from "react";
-import { Camera, Save, RotateCcw } from "lucide-react";
+import { Camera, Save, RotateCcw, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,43 +92,58 @@ function NewStudentPage() {
     reader.readAsDataURL(file);
   };
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const onSubmit = async (data: FormValues) => {
-    const studentId = uid();
-    await setStudentsState([
-      ...students,
-      { ...data, id: studentId, photo, createdAt: new Date().toISOString() },
-    ]);
-    toast.success(`${data.name} registered successfully!`);
+    setIsSaving(true);
+    try {
+      const studentId = uid();
+      await setStudentsState([
+        ...students,
+        { ...data, id: studentId, photo, createdAt: new Date().toISOString() },
+      ]);
+      toast.success(`${data.name} registered successfully!`);
 
-    // Send Welcome WhatsApp alert
-    const parentMobile = data.fatherMobile || data.motherMobile;
-    if (parentMobile) {
-      const provider = settings.whatsappProvider || "manual";
-      const template = settings.whatsappTemplateWelcome || 
-        "Dear Parent, thank you for registering [student_name] at Vishwa Tuition Center. We are excited to guide them on their academic journey. Regards, Prof. Anita Sharma.";
-      const messageText = template.replace("[student_name]", data.name);
+      // Send Welcome WhatsApp alert
+      const parentMobile = data.fatherMobile || data.motherMobile;
+      if (parentMobile) {
+        const provider = settings.whatsappProvider || "manual";
+        const template = settings.whatsappTemplateWelcome || 
+          "Dear Parent, thank you for registering [student_name] at Vishwa Tuition Center. We are excited to guide them on their academic journey. Regards, Prof. Anita Sharma.";
+        const messageText = template.replace("[student_name]", data.name);
 
-      if (provider === "manual") {
-        let phone = parentMobile.replace(/[\s\-\(\)\+]/g, "");
-        if (phone.length === 10) phone = "91" + phone;
-        const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
-        window.open(url, "_blank");
-        toast.success("Opening WhatsApp welcome message link...");
-      } else {
-        sendWhatsAppAlert({
-          data: {
-            recipientPhone: parentMobile,
-            studentName: data.name,
-            status: "Welcome",
-            studentId
+        if (provider === "manual") {
+          let phone = parentMobile.replace(/[\s\-\(\)\+]/g, "");
+          if (phone.length === 10) phone = "91" + phone;
+          const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
+          window.open(url, "_blank");
+          toast.success("Opening WhatsApp welcome message link...");
+        } else {
+          // Wrap in a loader toast so the user knows it's sending automated message
+          const loadingAlert = toast.loading("Sending automated welcome WhatsApp message...");
+          try {
+            await sendWhatsAppAlert({
+              data: {
+                recipientPhone: parentMobile,
+                studentName: data.name,
+                status: "Welcome",
+                studentId
+              }
+            });
+            toast.success("Automated welcome alert sent successfully!", { id: loadingAlert });
+          } catch (e: any) {
+            console.error("Failed to send welcome alert:", e);
+            toast.error("Failed to send automated welcome alert", { id: loadingAlert });
           }
-        }).catch((err) => {
-          console.error("Failed to send automated welcome WhatsApp alert:", err);
-        });
+        }
       }
-    }
 
-    navigate({ to: "/students" });
+      navigate({ to: "/students" });
+    } catch (err: any) {
+      toast.error(`Failed to register student: ${err.message || err}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleReset = () => {
@@ -243,8 +258,16 @@ function NewStudentPage() {
             <Button type="button" variant="outline" onClick={handleReset} className="rounded-xl">
               <RotateCcw className="mr-2 h-4 w-4" /> Reset
             </Button>
-            <Button type="submit" className="rounded-xl gradient-brand shadow-glow">
-              <Save className="mr-2 h-4 w-4" /> Save Student
+            <Button type="submit" disabled={isSaving} className="rounded-xl gradient-brand shadow-glow">
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" /> Save Student
+                </>
+              )}
             </Button>
           </div>
         </div>

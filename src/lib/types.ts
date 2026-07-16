@@ -1,4 +1,4 @@
-export type Standard = "6th" | "7th" | "8th" | "9th" | "10th" | "11th" | "12th";
+export type Standard = string;
 export const STANDARDS: Standard[] = ["6th", "7th", "8th", "9th", "10th", "11th", "12th"];
 
 export type Gender = "Male" | "Female" | "Other";
@@ -79,6 +79,7 @@ export interface Material {
 }
 
 export interface AppSettings {
+  standards?: string[];
   instituteName: string;
   teacherName: string;
   contact: string;
