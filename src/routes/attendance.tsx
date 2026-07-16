@@ -67,8 +67,10 @@ function AttendancePage() {
     const loadingToast = toast.loading(`Sending automated bulk attendance alerts to parents...`);
     try {
       const res = await sendBulkAttendanceAlerts({ 
-        date: dateKey, 
-        standard 
+        data: {
+          date: dateKey, 
+          standard 
+        }
       });
 
       if (res.success) {

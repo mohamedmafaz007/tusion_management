@@ -107,10 +107,12 @@ function MessageLogsPage() {
       const queryStatus = filterStatus === "all" ? undefined : filterStatus;
       
       const res = await getMessageLogs({
-        limit,
-        offset: page * limit,
-        type: queryType,
-        status: queryStatus
+        data: {
+          limit,
+          offset: page * limit,
+          type: queryType,
+          status: queryStatus
+        }
       });
       
       setLogs(res.logs);
@@ -153,7 +155,9 @@ function MessageLogsPage() {
     setIsSendingReminders(true);
     const loader = toast.loading(`Checking and sending pending fee reminders...`);
     try {
-      const res = await sendMonthlyFeeReminders({ month: selectedMonth });
+      const res = await sendMonthlyFeeReminders({
+        data: { month: selectedMonth }
+      });
       if (res.manual) {
         toast.error("WhatsApp provider is set to manual. Cannot send automatic bulk alerts.", { id: loader });
       } else {
@@ -176,7 +180,9 @@ function MessageLogsPage() {
     setIsSendingOverdue(true);
     const loader = toast.loading(`Checking and sending overdue alerts...`);
     try {
-      const res = await sendFeeOverdueReminders({ month: selectedMonth });
+      const res = await sendFeeOverdueReminders({
+        data: { month: selectedMonth }
+      });
       if (res.manual) {
         toast.error("WhatsApp provider is set to manual. Cannot send automatic bulk alerts.", { id: loader });
       } else {
