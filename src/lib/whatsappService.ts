@@ -9,6 +9,19 @@ import fs from "fs";
 import path from "path";
 import QRCode from "qrcode";
 import PDFDocument from "pdfkit";
+import { fileURLToPath } from "url";
+
+// Shim __dirname globally for PDFKit when bundled in ESM serverless environments (like Vercel)
+if (typeof globalThis !== "undefined" && !("__dirname" in globalThis)) {
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    // Point to the parent directory (.output/server/) where the 'data' folder is copied during build
+    (globalThis as any).__dirname = path.join(__dirname, "..");
+  } catch (e) {
+    console.error("[WhatsApp] Failed to shim globalThis.__dirname:", e);
+  }
+}
 
 const authInfoPath = path.join(process.cwd(), "auth_info");
 const logger = pino({ level: "silent" });
