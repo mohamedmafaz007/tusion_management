@@ -13,6 +13,10 @@ export default defineConfig({
     server: { entry: "server" },
   },
   nitro: {
-    preset: process.env.NITRO_PRESET || (process.env.VERCEL ? "vercel" : "node-server"),
+    preset: (() => {
+      const preset = process.env.NITRO_PRESET || (process.env.VERCEL ? "vercel" : "node-server");
+      console.log(`\n=== [Nitro Build Preset: ${preset}] ===\n`);
+      return preset;
+    })(),
   },
 });
