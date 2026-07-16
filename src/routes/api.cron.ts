@@ -11,7 +11,7 @@ export const Route = createFileRoute("/api/cron")({
           const birthdayRes = await checkAndSendBirthdayWishes();
 
           // 2. On the 1st day of the month, dispatch fee reminders automatically
-          let feeRes = { sent: 0, failed: 0, total: 0 };
+          let feeRes: any = { sent: 0, failed: 0, total: 0 };
           const today = new Date();
           if (today.getDate() === 1) {
             const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
