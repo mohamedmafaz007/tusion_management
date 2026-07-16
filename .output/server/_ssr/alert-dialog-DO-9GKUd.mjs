@@ -1,8 +1,8 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { P as require_jsx_runtime, a as Overlay2, c as Title2, i as Description2, n as Cancel, o as Portal2, r as Content2, s as Root2, t as Action } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { a as buttonVariants, s as cn } from "./hooks-CxJWRhux.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/alert-dialog-B8Q8dh2q.js
+import { a as buttonVariants, s as cn } from "./hooks-BQeneTLO.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/alert-dialog-DO-9GKUd.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var AlertDialog = Root2;

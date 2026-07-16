@@ -1,5 +1,5 @@
 import { c as createServerFn, i as TSS_SERVER_FUNCTION } from "./createServerFn-CIHAFgYl.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/db-DM92oBLL.js
+//#region node_modules/.nitro/vite/services/ssr/assets/db-DVMB-JgP.js
 var createServerRpc = (serverFnMeta, splitImportFn) => {
 	const url = "/_serverFn/" + serverFnMeta.id;
 	return Object.assign(splitImportFn, {
@@ -195,11 +195,14 @@ var syncDbStudents = createServerFn({ method: "POST" }).validator((students) => 
 		notes: s.notes === void 0 ? null : s.notes,
 		createdAt: s.createdAt || (/* @__PURE__ */ new Date()).toISOString()
 	}));
+	const uniqueStudents = /* @__PURE__ */ new Map();
+	for (const item of sanitized) if (item.id) uniqueStudents.set(item.id, item);
+	const deduplicated = Array.from(uniqueStudents.values());
 	try {
 		await sql.begin(async (sql) => {
 			await sql`DELETE FROM students`;
-			if (sanitized.length > 0) await sql`
-            INSERT INTO students ${sql(sanitized, [
+			if (deduplicated.length > 0) await sql`
+            INSERT INTO students ${sql(deduplicated, [
 				"id",
 				"photo",
 				"name",
@@ -261,11 +264,14 @@ var syncDbAttendance = createServerFn({ method: "POST" }).validator((attendance)
 		status: a.status || "Present",
 		remarks: a.remarks === void 0 ? null : a.remarks
 	}));
+	const uniqueAttendance = /* @__PURE__ */ new Map();
+	for (const item of sanitized) if (item.id) uniqueAttendance.set(item.id, item);
+	const deduplicated = Array.from(uniqueAttendance.values());
 	try {
 		await sql.begin(async (sql) => {
 			await sql`DELETE FROM attendance`;
-			if (sanitized.length > 0) await sql`
-            INSERT INTO attendance ${sql(sanitized, [
+			if (deduplicated.length > 0) await sql`
+            INSERT INTO attendance ${sql(deduplicated, [
 				"id",
 				"studentId",
 				"date",
@@ -319,11 +325,14 @@ var syncDbFees = createServerFn({ method: "POST" }).validator((fees) => fees).ha
 		paidDate: f.paidDate === void 0 ? null : f.paidDate,
 		status: f.status || "Pending"
 	}));
+	const uniqueFees = /* @__PURE__ */ new Map();
+	for (const item of sanitized) if (item.id) uniqueFees.set(item.id, item);
+	const deduplicated = Array.from(uniqueFees.values());
 	try {
 		await sql.begin(async (sql) => {
 			await sql`DELETE FROM fees`;
-			if (sanitized.length > 0) await sql`
-            INSERT INTO fees ${sql(sanitized, [
+			if (deduplicated.length > 0) await sql`
+            INSERT INTO fees ${sql(deduplicated, [
 				"id",
 				"studentId",
 				"month",
@@ -385,11 +394,14 @@ var syncDbMaterials = createServerFn({ method: "POST" }).validator((materials) =
 		driveFileId: m.driveFileId === void 0 ? "" : m.driveFileId,
 		createdAt: m.createdAt || (/* @__PURE__ */ new Date()).toISOString()
 	}));
+	const uniqueMaterials = /* @__PURE__ */ new Map();
+	for (const item of sanitized) if (item.id) uniqueMaterials.set(item.id, item);
+	const deduplicated = Array.from(uniqueMaterials.values());
 	try {
 		await sql.begin(async (sql) => {
 			await sql`DELETE FROM materials`;
-			if (sanitized.length > 0) await sql`
-            INSERT INTO materials ${sql(sanitized, [
+			if (deduplicated.length > 0) await sql`
+            INSERT INTO materials ${sql(deduplicated, [
 				"id",
 				"standard",
 				"type",
@@ -607,7 +619,7 @@ var sendWhatsAppAlert = createServerFn({ method: "POST" }).validator((data) => d
 	};
 });
 async function getWhatsAppService() {
-	if (typeof window === "undefined") return await import("./whatsappService-D1S4el9J.mjs");
+	if (typeof window === "undefined") return await import("./whatsappService-DxfPNy6J.mjs");
 	return null;
 }
 var getBaileysStatus_createServerFn_handler = createServerRpc({

@@ -2,17 +2,17 @@ import { o as __toESM } from "../_runtime.mjs";
 import { _ as useNavigate, g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { P as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { C as useHydrated, E as useStudents, S as useFees, b as uid, i as Input, n as Button, t as Badge, w as useMaterials, x as useAttendance } from "./hooks-CxJWRhux.mjs";
+import { C as useHydrated, E as useStudents, S as useFees, b as uid, i as Input, n as Button, t as Badge, w as useMaterials, x as useAttendance } from "./hooks-BQeneTLO.mjs";
 import { C as Pencil, D as MapPin, S as Phone, at as CalendarCheck, g as Save, h as School, it as Calendar, n as Wallet, ot as BookOpen, t as X, u as Trash2, ut as ArrowLeft } from "../_libs/lucide-react.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { t as StatCard } from "./StatCard-CV6bI2Jz.mjs";
-import { n as FeeStatusBadge, t as AttendanceStatusBadge } from "./StatusBadges-BL75lvXw.mjs";
+import { t as StatCard } from "./StatCard-CUMrAwTq.mjs";
+import { n as FeeStatusBadge, t as AttendanceStatusBadge } from "./StatusBadges-HjZ1TJT2.mjs";
 import { a as studentAvatarStyle, i as studentAttendancePct, n as formatCurrency, o as studentFeeStatus, r as initials, t as currentMonthKey } from "./derive-JWIEq6tF.mjs";
-import { t as Label } from "./label-DFafDjJV.mjs";
-import { t as Route } from "./students._id-BFCvpoES.mjs";
-import { t as Textarea } from "./textarea-Sut9A7Ds.mjs";
-import { a as AlertDialogDescription, c as AlertDialogTitle, i as AlertDialogContent, n as AlertDialogAction, o as AlertDialogFooter, r as AlertDialogCancel, s as AlertDialogHeader, t as AlertDialog } from "./alert-dialog-B8Q8dh2q.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/students._id-BypnFZge.js
+import { t as Label } from "./label-D1lm1bWH.mjs";
+import { t as Route } from "./students._id-BfZ8alAI.mjs";
+import { t as Textarea } from "./textarea-DZof5tBS.mjs";
+import { a as AlertDialogDescription, c as AlertDialogTitle, i as AlertDialogContent, n as AlertDialogAction, o as AlertDialogFooter, r as AlertDialogCancel, s as AlertDialogHeader, t as AlertDialog } from "./alert-dialog-DO-9GKUd.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/students._id-KkpE3B8v.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function StudentProfilePage() {

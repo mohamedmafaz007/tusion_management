@@ -213,12 +213,21 @@ export const syncDbStudents = createServerFn({ method: "POST" })
       createdAt: s.createdAt || new Date().toISOString()
     }));
 
+    // Deduplicate by id to prevent unique constraint violations
+    const uniqueStudents = new Map<string, typeof sanitized[0]>();
+    for (const item of sanitized) {
+      if (item.id) {
+        uniqueStudents.set(item.id, item);
+      }
+    }
+    const deduplicated = Array.from(uniqueStudents.values());
+
     try {
       await sql.begin(async (sql: any) => {
         await sql`DELETE FROM students`;
-        if (sanitized.length > 0) {
+        if (deduplicated.length > 0) {
           await sql`
-            INSERT INTO students ${(sql as any)(sanitized, ["id", "photo", "name", "gender", "dob", "school", "standard", "section", "parentName", "fatherMobile", "motherMobile", "address", "joiningDate", "monthlyFees", "admissionFees", "notes", "createdAt"])}
+            INSERT INTO students ${(sql as any)(deduplicated, ["id", "photo", "name", "gender", "dob", "school", "standard", "section", "parentName", "fatherMobile", "motherMobile", "address", "joiningDate", "monthlyFees", "admissionFees", "notes", "createdAt"])}
           `;
         }
       });
@@ -262,12 +271,21 @@ export const syncDbAttendance = createServerFn({ method: "POST" })
       remarks: a.remarks === undefined ? null : a.remarks
     }));
 
+    // Deduplicate by id to prevent unique constraint violations
+    const uniqueAttendance = new Map<string, typeof sanitized[0]>();
+    for (const item of sanitized) {
+      if (item.id) {
+        uniqueAttendance.set(item.id, item);
+      }
+    }
+    const deduplicated = Array.from(uniqueAttendance.values());
+
     try {
       await sql.begin(async (sql: any) => {
         await sql`DELETE FROM attendance`;
-        if (sanitized.length > 0) {
+        if (deduplicated.length > 0) {
           await sql`
-            INSERT INTO attendance ${(sql as any)(sanitized, ["id", "studentId", "date", "status", "remarks"])}
+            INSERT INTO attendance ${(sql as any)(deduplicated, ["id", "studentId", "date", "status", "remarks"])}
           `;
         }
       });
@@ -315,12 +333,21 @@ export const syncDbFees = createServerFn({ method: "POST" })
       status: f.status || "Pending"
     }));
 
+    // Deduplicate by id to prevent unique constraint violations
+    const uniqueFees = new Map<string, typeof sanitized[0]>();
+    for (const item of sanitized) {
+      if (item.id) {
+        uniqueFees.set(item.id, item);
+      }
+    }
+    const deduplicated = Array.from(uniqueFees.values());
+
     try {
       await sql.begin(async (sql: any) => {
         await sql`DELETE FROM fees`;
-        if (sanitized.length > 0) {
+        if (deduplicated.length > 0) {
           await sql`
-            INSERT INTO fees ${(sql as any)(sanitized, ["id", "studentId", "month", "amount", "paidAmount", "paidDate", "status"])}
+            INSERT INTO fees ${(sql as any)(deduplicated, ["id", "studentId", "month", "amount", "paidAmount", "paidDate", "status"])}
           `;
         }
       });
@@ -374,12 +401,21 @@ export const syncDbMaterials = createServerFn({ method: "POST" })
       createdAt: m.createdAt || new Date().toISOString()
     }));
 
+    // Deduplicate by id to prevent unique constraint violations
+    const uniqueMaterials = new Map<string, typeof sanitized[0]>();
+    for (const item of sanitized) {
+      if (item.id) {
+        uniqueMaterials.set(item.id, item);
+      }
+    }
+    const deduplicated = Array.from(uniqueMaterials.values());
+
     try {
       await sql.begin(async (sql: any) => {
         await sql`DELETE FROM materials`;
-        if (sanitized.length > 0) {
+        if (deduplicated.length > 0) {
           await sql`
-            INSERT INTO materials ${(sql as any)(sanitized, ["id", "standard", "type", "title", "fileName", "fileType", "size", "driveUrl", "driveFileId", "createdAt"])}
+            INSERT INTO materials ${(sql as any)(deduplicated, ["id", "standard", "type", "title", "fileName", "fileType", "size", "driveUrl", "driveFileId", "createdAt"])}
           `;
         }
       });

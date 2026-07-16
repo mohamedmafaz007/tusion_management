@@ -1,15 +1,15 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { P as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { C as useHydrated, d as getDbMaterials, i as Input, m as isDbConfigured, n as Button, s as cn, w as useMaterials } from "./hooks-CxJWRhux.mjs";
+import { C as useHydrated, d as getDbMaterials, i as Input, m as isDbConfigured, n as Button, s as cn, w as useMaterials } from "./hooks-BQeneTLO.mjs";
 import { B as Eye, F as FolderOpen, H as Cloud, I as FileType, L as FileText, R as FilePlay, V as Download, m as Search, s as Upload, u as Trash2, x as Presentation, z as FileImage } from "../_libs/lucide-react.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { n as PageHeader } from "./AppShell-BQnXm3Nl.mjs";
-import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-C6WfqL96.mjs";
+import { n as PageHeader } from "./AppShell-B0zkrLiL.mjs";
+import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-Ghqj0CD4.mjs";
 import { n as STANDARDS, t as MATERIAL_TYPES } from "./types-BX1Dn8M6.mjs";
-import { t as Label } from "./label-DFafDjJV.mjs";
-import { a as DialogHeader, i as DialogFooter, n as DialogContent, o as DialogTitle, t as Dialog } from "./dialog-CwmBflMo.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/materials-BfyWEXrM.js
+import { t as Label } from "./label-D1lm1bWH.mjs";
+import { a as DialogHeader, i as DialogFooter, n as DialogContent, o as DialogTitle, t as Dialog } from "./dialog-B-KdTOA_.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/materials-CkDm46d_.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function extIcon(ext) {

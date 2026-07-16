@@ -6,13 +6,15 @@ import { t as PDFDocument } from "../_libs/pdfkit+png-js.mjs";
 import $52ZIf$fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-//#region node_modules/.nitro/vite/services/ssr/assets/whatsappService-D1S4el9J.js
+//#region node_modules/.nitro/vite/services/ssr/assets/whatsappService-DxfPNy6J.js
 var import_pino = /* @__PURE__ */ __toESM(require_pino());
 var import_lib = /* @__PURE__ */ __toESM(require_lib());
-if (typeof globalThis !== "undefined" && !("__dirname" in globalThis)) try {
+if (typeof globalThis !== "undefined") try {
 	const __filename = fileURLToPath(import.meta.url);
 	const __dirname = path.dirname(__filename);
-	globalThis.__dirname = path.join(__dirname, "..");
+	const targetDir = path.join(__dirname, "..");
+	globalThis.__dirname = targetDir;
+	if (typeof global !== "undefined") global.__dirname = targetDir;
 } catch (e) {
 	console.error("[WhatsApp] Failed to shim globalThis.__dirname:", e);
 }

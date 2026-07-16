@@ -2,14 +2,14 @@ import { o as __toESM } from "../_runtime.mjs";
 import { c as HeadContent, d as createRouter, f as Outlet, g as Link, h as createRootRouteWithContext, m as createFileRoute, p as lazyRouteComponent, s as Scripts, v as useRouter } from "../_libs/@tanstack/react-router+[...].mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { P as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { _ as sendMonthlyFeeReminders, o as checkAndSendBirthdayWishes } from "./hooks-CxJWRhux.mjs";
+import { _ as sendMonthlyFeeReminders, o as checkAndSendBirthdayWishes } from "./hooks-BQeneTLO.mjs";
 import { t as Toaster } from "../_libs/sonner.mjs";
-import { t as AppShell } from "./AppShell-BQnXm3Nl.mjs";
-import { t as Route$12 } from "./students._id-BFCvpoES.mjs";
+import { t as AppShell } from "./AppShell-B0zkrLiL.mjs";
+import { t as Route$12 } from "./students._id-BfZ8alAI.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { t as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
 import { i as stringType, n as enumType, r as objectType, t as coerce } from "../_libs/zod.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-D-bknUQx.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-DWeUweg_.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var styles_default = "/assets/styles-RTN9NhZf.css";
@@ -228,7 +228,7 @@ var Route$10 = createFileRoute("/sitemap.xml")({ server: { handlers: { GET: asyn
 		"Cache-Control": "public, max-age=3600"
 	} });
 } } } });
-var $$splitComponentImporter$8 = () => import("./settings-RZJ80qic.mjs");
+var $$splitComponentImporter$8 = () => import("./settings-DPt93EPZ.mjs");
 var Route$9 = createFileRoute("/settings")({
 	head: () => ({ meta: [{ title: "Settings — Vishwa Tuition Center" }, {
 		name: "description",
@@ -236,7 +236,7 @@ var Route$9 = createFileRoute("/settings")({
 	}] }),
 	component: lazyRouteComponent($$splitComponentImporter$8, "component")
 });
-var $$splitComponentImporter$7 = () => import("./reports-CSCQpzVT.mjs");
+var $$splitComponentImporter$7 = () => import("./reports-IrDNcIzO.mjs");
 var Route$8 = createFileRoute("/reports")({
 	head: () => ({ meta: [{ title: "Attendance Reports — Vishwa Tuition Center" }, {
 		name: "description",
@@ -244,7 +244,7 @@ var Route$8 = createFileRoute("/reports")({
 	}] }),
 	component: lazyRouteComponent($$splitComponentImporter$7, "component")
 });
-var $$splitComponentImporter$6 = () => import("./messages-VnHHxZFv.mjs");
+var $$splitComponentImporter$6 = () => import("./messages-B3iD_IbM.mjs");
 var Route$7 = createFileRoute("/messages")({
 	head: () => ({ meta: [{ title: "Message Logs — Vishwa Tuition Center" }, {
 		name: "description",
@@ -252,7 +252,7 @@ var Route$7 = createFileRoute("/messages")({
 	}] }),
 	component: lazyRouteComponent($$splitComponentImporter$6, "component")
 });
-var $$splitComponentImporter$5 = () => import("./materials-BfyWEXrM.mjs");
+var $$splitComponentImporter$5 = () => import("./materials-CkDm46d_.mjs");
 var Route$6 = createFileRoute("/materials")({
 	head: () => ({ meta: [{ title: "Study Materials — Vishwa Tuition Center" }, {
 		name: "description",
@@ -260,7 +260,7 @@ var Route$6 = createFileRoute("/materials")({
 	}] }),
 	component: lazyRouteComponent($$splitComponentImporter$5, "component")
 });
-var $$splitComponentImporter$4 = () => import("./fees-BoKO527t.mjs");
+var $$splitComponentImporter$4 = () => import("./fees-SOi9NWA8.mjs");
 var Route$5 = createFileRoute("/fees")({
 	head: () => ({ meta: [{ title: "Fees — Vishwa Tuition Center" }, {
 		name: "description",
@@ -268,7 +268,7 @@ var Route$5 = createFileRoute("/fees")({
 	}] }),
 	component: lazyRouteComponent($$splitComponentImporter$4, "component")
 });
-var $$splitComponentImporter$3 = () => import("./attendance-Dx8LSvof.mjs");
+var $$splitComponentImporter$3 = () => import("./attendance-DRBTxvge.mjs");
 var Route$4 = createFileRoute("/attendance")({
 	head: () => ({ meta: [{ title: "Attendance — Vishwa Tuition Center" }, {
 		name: "description",
@@ -276,7 +276,7 @@ var Route$4 = createFileRoute("/attendance")({
 	}] }),
 	component: lazyRouteComponent($$splitComponentImporter$3, "component")
 });
-var $$splitComponentImporter$2 = () => import("./routes-bDFL95u5.mjs");
+var $$splitComponentImporter$2 = () => import("./routes-NYXgjPrm.mjs");
 var Route$3 = createFileRoute("/")({
 	head: () => ({ meta: [{ title: "Dashboard — Vishwa Tuition Center" }, {
 		name: "description",
@@ -284,7 +284,7 @@ var Route$3 = createFileRoute("/")({
 	}] }),
 	component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-var $$splitComponentImporter$1 = () => import("./students.index-CaJ-cQ9z.mjs");
+var $$splitComponentImporter$1 = () => import("./students.index-CDYAAuEe.mjs");
 var Route$2 = createFileRoute("/students/")({
 	head: () => ({ meta: [{ title: "Students — Vishwa Tuition Center" }, {
 		name: "description",
@@ -292,7 +292,7 @@ var Route$2 = createFileRoute("/students/")({
 	}] }),
 	component: lazyRouteComponent($$splitComponentImporter$1, "component")
 });
-var $$splitComponentImporter = () => import("./students.new-Cka6LuBK.mjs");
+var $$splitComponentImporter = () => import("./students.new-DeFRYhUn.mjs");
 objectType({
 	name: stringType().trim().min(2, "Name is required").max(100),
 	gender: enumType([
