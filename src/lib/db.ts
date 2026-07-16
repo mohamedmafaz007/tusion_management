@@ -446,5 +446,97 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
       return { success: true, automated: true };
     }
 
+    if (provider === "baileys") {
+      const ws = await getWhatsAppService();
+      if (!ws) throw new Error("WhatsApp service only available on server");
+      await ws.sendWhatsAppTextMessage(phone, messageText);
+      return { success: true, automated: true };
+    }
+
     return { success: false, error: "Unsupported provider" };
   });
+
+// --- Server Functions for Baileys ---
+async function getWhatsAppService() {
+  if (typeof window === "undefined") {
+    return await import("./whatsappService");
+  }
+  return null;
+}
+
+export const getBaileysStatus = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const ws = await getWhatsAppService();
+    if (!ws) return { status: "disconnected" as const, qr: "" };
+    return ws.getWhatsAppStatus();
+  });
+
+export const connectBaileys = createServerFn({ method: "POST" })
+  .handler(async () => {
+    const ws = await getWhatsAppService();
+    if (!ws) return;
+    await ws.initWhatsApp(true);
+  });
+
+export const disconnectBaileys = createServerFn({ method: "POST" })
+  .handler(async () => {
+    const ws = await getWhatsAppService();
+    if (!ws) return;
+    await ws.disconnectWhatsApp();
+  });
+
+export const sendWhatsAppReceipt = createServerFn({ method: "POST" })
+  .validator((data: { studentId: string; feeId: string }) => data)
+  .handler(async ({ data }) => {
+    const ws = await getWhatsAppService();
+    if (!ws) throw new Error("Server only function");
+
+    const settings = await getDbSettings();
+    if (!settings) throw new Error("Settings not configured");
+
+    const sql = await getSql();
+    if (!sql) throw new Error("Database not connected");
+
+    const studentRows = await sql`SELECT * FROM students WHERE id = ${data.studentId}`;
+    if (studentRows.length === 0) throw new Error("Student not found");
+    const s = studentRows[0];
+
+    const feeRows = await sql`SELECT * FROM fees WHERE id = ${data.feeId}`;
+    if (feeRows.length === 0) throw new Error("Fee record not found");
+    const f = feeRows[0];
+
+    const parentMobile = s.fatherMobile || s.motherMobile;
+    if (!parentMobile) throw new Error("No parent mobile number registered");
+
+    const pdfBuffer = await ws.generateReceiptPdf({
+      instituteName: settings.instituteName || "Vishwa Tuition Center",
+      address: settings.address || "",
+      contact: settings.contact || "",
+      studentName: s.name,
+      standard: s.standard,
+      section: s.section,
+      month: f.month,
+      amount: Number(f.amount),
+      paidAmount: Number(f.paidAmount),
+      paidDate: f.paidDate || new Date().toISOString().slice(0, 10),
+      receiptId: f.id
+    });
+
+    const formatCurrency = (val: number) => `Rs. ${val.toLocaleString()}`;
+
+    const textMessage = `Dear Parent, please find attached the fee receipt for ${s.name} for the month of ${f.month}.\n\n` +
+      `Amount Paid: ${formatCurrency(Number(f.paidAmount))}\n` +
+      `Status: ${Number(f.amount) - Number(f.paidAmount) <= 0 ? "Paid" : "Partially Paid"}\n` +
+      `Receipt ID: ${f.id.slice(0, 8).toUpperCase()}\n\n` +
+      `Thank you,\n${settings.instituteName || "Vishwa Tuition Center"}`;
+
+    await ws.sendWhatsAppMessageWithPDF(
+      parentMobile,
+      textMessage,
+      pdfBuffer,
+      `Receipt_${f.id.slice(0, 8).toUpperCase()}.pdf`
+    );
+
+    return { success: true };
+  });
+

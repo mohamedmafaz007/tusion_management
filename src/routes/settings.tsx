@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
-import { Save, Upload, Sun, Moon, Bell } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Save, Upload, Sun, Moon, Bell, CheckCircle, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { useSettings } from "@/lib/hooks";
 import { DEFAULT_SETTINGS } from "@/lib/storage";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getBaileysStatus, connectBaileys, disconnectBaileys } from "@/lib/db";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -29,6 +30,64 @@ function SettingsPage() {
   const [settings, setSettingsState] = useSettings();
   const [draft, setDraft] = useState(settings);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const [baileysStatus, setBaileysStatus] = useState<"disconnected" | "connecting" | "qrcode" | "connected">("disconnected");
+  const [baileysQr, setBaileysQr] = useState<string>("");
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+
+  // Sync draft when settings load
+  useEffect(() => {
+    setDraft(settings);
+  }, [settings]);
+
+  // Poll Baileys status when provider is set to "baileys"
+  useEffect(() => {
+    if (draft.whatsappProvider !== "baileys") return;
+
+    const checkStatus = async () => {
+      try {
+        const res = await getBaileysStatus();
+        setBaileysStatus(res.status as any);
+        setBaileysQr(res.qr || "");
+      } catch (err) {
+        console.error("Failed to check Baileys status:", err);
+      }
+    };
+
+    checkStatus();
+    const interval = setInterval(checkStatus, 2500);
+    return () => clearInterval(interval);
+  }, [draft.whatsappProvider]);
+
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    try {
+      await connectBaileys();
+      toast.info("Initializing WhatsApp connection...");
+      const res = await getBaileysStatus();
+      setBaileysStatus(res.status as any);
+      setBaileysQr(res.qr || "");
+    } catch (err: any) {
+      toast.error(`Connection failed: ${err.message || err}`);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    setIsDisconnecting(true);
+    try {
+      await disconnectBaileys();
+      setBaileysStatus("disconnected");
+      setBaileysQr("");
+      toast.success("Disconnected from WhatsApp and logged out.");
+    } catch (err: any) {
+      toast.error(`Disconnect failed: ${err.message || err}`);
+    } finally {
+      setIsDisconnecting(false);
+    }
+  };
 
   const save = () => {
     setSettingsState(draft);
@@ -106,11 +165,89 @@ function SettingsPage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="manual">WhatsApp Redirect wa.me Link (Free, Manual)</SelectItem>
+                  <SelectItem value="baileys">Direct WhatsApp (Baileys QR Web - Free, Automated)</SelectItem>
                   <SelectItem value="ultramsg">UltraMsg Gateway API (Automated)</SelectItem>
                   <SelectItem value="twilio">Twilio WhatsApp Business API (Automated)</SelectItem>
                 </SelectContent>
               </Select>
             </Fld>
+
+            {draft.whatsappProvider === "baileys" && (
+              <div className="md:col-span-2 border border-border/60 rounded-2xl p-5 bg-secondary/15 space-y-4">
+                <div className="flex items-center justify-between border-b border-border/50 pb-3">
+                  <div>
+                    <h4 className="font-semibold text-sm">Direct WhatsApp pairing</h4>
+                    <p className="text-xs text-muted-foreground">Link your own WhatsApp account directly to automate receipts and messages for free.</p>
+                  </div>
+                  <span className={cn(
+                    "text-xs px-2.5 py-1 rounded-full font-semibold capitalize",
+                    baileysStatus === "connected" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400" :
+                    baileysStatus === "qrcode" ? "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400 animate-pulse" :
+                    baileysStatus === "connecting" ? "bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400 animate-pulse" :
+                    "bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-400"
+                  )}>
+                    {baileysStatus}
+                  </span>
+                </div>
+
+                <div className="flex flex-col md:flex-row items-center gap-6 pt-2">
+                  <div className="flex flex-col items-center justify-center p-3 border border-dashed border-border/80 rounded-2xl bg-background/50 w-[200px] h-[200px] shrink-0 relative shadow-inner">
+                    {baileysStatus === "qrcode" && baileysQr ? (
+                      <img src={baileysQr} alt="Scan QR Code" className="w-[170px] h-[170px]" />
+                    ) : baileysStatus === "connected" ? (
+                      <div className="text-center space-y-2">
+                        <CheckCircle className="h-10 w-10 text-emerald-500 mx-auto" />
+                        <span className="text-emerald-500 font-bold text-xs block">Pairing Successful</span>
+                        <span className="text-[10px] text-muted-foreground block leading-tight">Your account is connected</span>
+                      </div>
+                    ) : baileysStatus === "connecting" ? (
+                      <div className="text-center space-y-2">
+                        <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto" />
+                        <span className="text-muted-foreground text-[11px] block">Waiting for handshake...</span>
+                      </div>
+                    ) : (
+                      <div className="text-center p-2 space-y-3">
+                        <span className="text-muted-foreground text-xs block">No active connection</span>
+                        <Button size="sm" className="rounded-lg h-8" onClick={handleConnect} disabled={isConnecting}>
+                          {isConnecting ? (
+                            <>
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                              Starting...
+                            </>
+                          ) : "Start Connection"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-4">
+                    <div className="space-y-1">
+                      <h5 className="text-xs font-semibold text-muted-foreground">Instructions</h5>
+                      <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside pl-1 leading-normal">
+                        <li>Select this option and save settings.</li>
+                        <li>Click <strong>Start Connection</strong> to retrieve the pairing code.</li>
+                        <li>Open WhatsApp on your mobile phone.</li>
+                        <li>Go to <strong>Settings</strong> &gt; <strong>Linked Devices</strong> &gt; <strong>Link a Device</strong>.</li>
+                        <li>Scan the QR code displayed on this screen.</li>
+                      </ol>
+                    </div>
+
+                    <div className="flex gap-2">
+                      {baileysStatus !== "disconnected" && (
+                        <Button size="sm" variant="destructive" className="rounded-lg" onClick={handleDisconnect} disabled={isDisconnecting}>
+                          {isDisconnecting ? (
+                            <>
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                              Logging out...
+                            </>
+                          ) : "Disconnect / Logout"}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {draft.whatsappProvider === "ultramsg" && (
               <>

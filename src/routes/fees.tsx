@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, Wallet, CheckCircle, Clock, Printer, Receipt, History } from "lucide-react";
+import { Search, Wallet, CheckCircle, Clock, Printer, Receipt, History, Send, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { sendWhatsAppReceipt } from "@/lib/db";
 import { StatCard } from "@/components/StatCard";
 import { FeeStatusBadge } from "@/components/StatusBadges";
 import {
@@ -90,22 +91,40 @@ function FeesPage() {
     return { total, paid, pending: total - paid };
   }, [fees, students, month]);
 
-  const markPaid = (studentId: string) => {
+  const [isSendingReceipt, setIsSendingReceipt] = useState(false);
+
+  const handleManualShare = async (studentId: string, feeId: string, name: string) => {
+    setIsSendingReceipt(true);
+    const loader = toast.loading(`Sending WhatsApp receipt to ${name}'s parent...`);
+    try {
+      await sendWhatsAppReceipt({ data: { studentId, feeId } });
+      toast.success("WhatsApp receipt sent successfully!", { id: loader });
+    } catch (err: any) {
+      console.error("Failed to send manual WhatsApp receipt:", err);
+      toast.error(`Failed to send WhatsApp receipt: ${err.message || err}`, { id: loader });
+    } finally {
+      setIsSendingReceipt(false);
+    }
+  };
+
+  const markPaid = async (studentId: string) => {
     const student = students.find((s) => s.id === studentId);
     if (!student) return;
     const existing = fees.find((f) => f.studentId === studentId && f.month === month);
     const paidDate = new Date().toISOString().slice(0, 10);
+    const feeId = existing ? existing.id : uid();
+
     if (existing) {
-      setFeesState(
+      await setFeesState(
         fees.map((f) =>
           f.id === existing.id ? { ...f, paidAmount: f.amount, status: "Paid", paidDate } : f,
         ),
       );
     } else {
-      setFeesState([
+      await setFeesState([
         ...fees,
         {
-          id: uid(),
+          id: feeId,
           studentId,
           month,
           amount: student.monthlyFees,
@@ -116,6 +135,23 @@ function FeesPage() {
       ]);
     }
     toast.success(`Payment recorded for ${student.name}`);
+
+    // Automatically send receipt if Baileys is the provider
+    if (settings.whatsappProvider === "baileys") {
+      const parentMobile = student.fatherMobile || student.motherMobile;
+      if (!parentMobile) {
+        toast.warning("Could not send automated WhatsApp receipt: No parent mobile number found.");
+        return;
+      }
+      const loader = toast.loading(`Sending automated WhatsApp receipt to ${student.name}'s parent...`);
+      try {
+        await sendWhatsAppReceipt({ data: { studentId, feeId } });
+        toast.success("WhatsApp receipt sent successfully!", { id: loader });
+      } catch (err: any) {
+        console.error("Failed to send automated WhatsApp receipt:", err);
+        toast.error(`Failed to send WhatsApp receipt: ${err.message || err}`, { id: loader });
+      }
+    }
   };
 
   const receiptData = useMemo(() => {
@@ -278,8 +314,27 @@ function FeesPage() {
               <div className="text-center text-xs text-muted-foreground">Thank you for your payment.</div>
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => setReceiptOf(null)}>Close</Button>
+            {settings.whatsappProvider === "baileys" && receiptData && (
+              <Button
+                variant="outline"
+                className="border-emerald-500/50 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400"
+                onClick={() => handleManualShare(receiptData.s.id, receiptData.f.id, receiptData.s.name)}
+                disabled={isSendingReceipt}
+              >
+                {isSendingReceipt ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" /> Send via WhatsApp
+                  </>
+                )}
+              </Button>
+            )}
             <Button className="gradient-brand" onClick={() => window.print()}>
               <Printer className="mr-2 h-4 w-4" /> Print
             </Button>
