@@ -334,18 +334,33 @@ export const syncDbMaterials = createServerFn({ method: "POST" })
     }
   });
 
+const DEFAULT_SERVER_SETTINGS = {
+  instituteName: "Vishwa Tuition Center",
+  teacherName: "Prof. Anita Sharma",
+  contact: "+91 98765 43210",
+  address: "12 MG Road, Bengaluru, IN",
+  whatsappProvider: "manual",
+  whatsappTemplatePresent: "Dear Parent, your child [student_name] was marked ✅ PRESENT at Vishwa Tuition Center today ([date]) at [time]. Regards, Vishwa Tuition Center.",
+  whatsappTemplateAbsent: "Dear Parent, your child [student_name] was marked ❌ ABSENT from Vishwa Tuition Center today ([date]). Please check with them. Regards, Vishwa Tuition Center.",
+  whatsappTemplateLate: "Dear Parent, your child [student_name] arrived ⏰ LATE at Vishwa Tuition Center today ([date]) at [time]. Regards, Vishwa Tuition Center.",
+  whatsappTemplateWelcome: "Dear Parent, thank you for registering [student_name] at Vishwa Tuition Center. We are excited to guide them on their academic journey. Regards, Prof. Anita Sharma.",
+  whatsappTemplateFeeReminder: "Dear Parent, this is a reminder that the tuition fee of Rs. [amount] for [student_name] (Std: [standard]) for [month] is pending. Please arrange payment at your earliest convenience. Regards, Vishwa Tuition Center.",
+  whatsappTemplateFeeOverdue: "Dear Parent, the tuition fee of Rs. [amount] for [student_name] for [month] is overdue. Kindly clear the dues to avoid any inconvenience. Regards, Vishwa Tuition Center.",
+  whatsappTemplateBirthday: "Dear Parent, Vishwa Tuition Center wishes [student_name] a very Happy Birthday! 🎉🎂 May this year bring them great success. Regards, Vishwa Tuition Center.",
+};
+
 // --- Server Functions for Settings ---
 export const getDbSettings = createServerFn({ method: "GET" })
   .handler(async () => {
     const sql = await getSql();
-    if (!sql) return null;
+    if (!sql) return DEFAULT_SERVER_SETTINGS as AppSettings;
     try {
       const rows = await sql`SELECT "value" FROM settings WHERE "key" = 'app_settings'`;
-      if (rows.length === 0) return null;
-      return JSON.parse(rows[0].value) as AppSettings;
+      if (rows.length === 0) return DEFAULT_SERVER_SETTINGS as AppSettings;
+      return { ...DEFAULT_SERVER_SETTINGS, ...JSON.parse(rows[0].value) } as AppSettings;
     } catch (e) {
       console.error("Failed to get settings from DB:", e);
-      return null;
+      return DEFAULT_SERVER_SETTINGS as AppSettings;
     }
   });
 
@@ -647,7 +662,7 @@ async function logMessage(data: {
   }
 }
 
-export const getMessageLogs = createServerFn({ method: "GET" })
+export const getMessageLogs = createServerFn({ method: "POST" })
   .validator((data: { limit?: number; offset?: number; type?: string; status?: string }) => data)
   .handler(async ({ data }) => {
     const sql = await getSql();

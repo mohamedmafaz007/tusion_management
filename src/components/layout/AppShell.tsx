@@ -32,7 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { useSettings } from "@/lib/hooks";
+import { useSettings, useHydrated } from "@/lib/hooks";
 import { toast } from "sonner";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
@@ -51,6 +51,7 @@ const nav: NavItem[] = [
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [settings] = useSettings();
+  const hydrated = useHydrated();
 
   return (
     <div className="flex h-full flex-col gap-2 p-4">
@@ -59,7 +60,9 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           <GraduationCap className="h-6 w-6 text-white" />
         </div>
         <div className="min-w-0">
-          <div className="truncate text-sm font-bold leading-tight">{settings.instituteName}</div>
+          <div className="truncate text-sm font-bold leading-tight">
+            {hydrated ? settings.instituteName : "Vishwa Tuition Center"}
+          </div>
           <div className="text-[11px] text-muted-foreground">Admin Dashboard</div>
         </div>
       </Link>
@@ -98,6 +101,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 export function AppShell({ children }: { children: ReactNode }) {
   const [settings, setSettingsState] = useSettings();
   const [open, setOpen] = useState(false);
+  const hydrated = useHydrated();
 
   // Theme sync
   useEffect(() => {
@@ -188,16 +192,18 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <button className="flex items-center gap-2 rounded-full pl-1 pr-3 py-1 transition-colors hover:bg-accent">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="gradient-brand text-xs font-bold text-white">
-                        {settings.teacherName.slice(0, 2).toUpperCase()}
+                        {hydrated ? settings.teacherName.slice(0, 2).toUpperCase() : "PR"}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden text-sm font-medium md:inline">{settings.teacherName.split(" ")[0]}</span>
+                    <span className="hidden text-sm font-medium md:inline">
+                      {hydrated ? settings.teacherName.split(" ")[0] : "Prof."}
+                    </span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
-                    <div className="font-medium">{settings.teacherName}</div>
-                    <div className="text-xs font-normal text-muted-foreground">{settings.contact}</div>
+                    <div className="font-medium">{hydrated ? settings.teacherName : "Prof. Anita Sharma"}</div>
+                    <div className="text-xs font-normal text-muted-foreground">{hydrated ? settings.contact : "+91 98765 43210"}</div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
