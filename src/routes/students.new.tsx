@@ -16,10 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useStudents } from "@/lib/hooks";
+import { useStudents, useSettings } from "@/lib/hooks";
 import { uid } from "@/lib/storage";
 import { STANDARDS } from "@/lib/types";
 import { toast } from "sonner";
+import { sendWhatsAppAlert } from "@/lib/db";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Name is required").max(100),
@@ -70,6 +71,7 @@ function NewStudentPage() {
   const [photo, setPhoto] = useState<string | undefined>();
   const fileRef = useRef<HTMLInputElement>(null);
   const [students, setStudentsState] = useStudents();
+  const [settings] = useSettings();
   const navigate = useNavigate();
 
   const form = useForm<FormValues>({
@@ -90,12 +92,40 @@ function NewStudentPage() {
     reader.readAsDataURL(file);
   };
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     setStudentsState([
       ...students,
       { ...data, id: uid(), photo, createdAt: new Date().toISOString() },
     ]);
     toast.success(`${data.name} registered successfully!`);
+
+    // Send Welcome WhatsApp alert
+    const parentMobile = data.fatherMobile || data.motherMobile;
+    if (parentMobile) {
+      const provider = settings.whatsappProvider || "manual";
+      const template = settings.whatsappTemplateWelcome || 
+        "Dear Parent, thank you for registering [student_name] at Bright Minds Tuition. We are excited to guide them on their academic journey. Regards, Prof. Anita Sharma.";
+      const messageText = template.replace("[student_name]", data.name);
+
+      if (provider === "manual") {
+        let phone = parentMobile.replace(/[\s\-\(\)\+]/g, "");
+        if (phone.length === 10) phone = "91" + phone;
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
+        window.open(url, "_blank");
+        toast.success("Opening WhatsApp welcome message link...");
+      } else {
+        sendWhatsAppAlert({
+          data: {
+            recipientPhone: parentMobile,
+            studentName: data.name,
+            status: "Welcome"
+          }
+        }).catch((err) => {
+          console.error("Failed to send automated welcome WhatsApp alert:", err);
+        });
+      }
+    }
+
     navigate({ to: "/students" });
   };
 

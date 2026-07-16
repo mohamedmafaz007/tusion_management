@@ -370,12 +370,19 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
 
     const { recipientPhone, studentName, status } = data;
     
-    let template = status === "Present" 
-      ? settings.whatsappTemplatePresent 
-      : settings.whatsappTemplateAbsent;
+    let template = "";
+    if (status === "Present") {
+      template = settings.whatsappTemplatePresent || "";
+    } else if (status === "Absent") {
+      template = settings.whatsappTemplateAbsent || "";
+    } else if (status === "Welcome") {
+      template = settings.whatsappTemplateWelcome || "";
+    }
       
     if (!template) {
-      template = `Dear Parent, your child [student_name] was marked ${status} today.`;
+      template = status === "Welcome"
+        ? `Dear Parent, thank you for registering [student_name] at Bright Minds Tuition.`
+        : `Dear Parent, your child [student_name] was marked ${status} today.`;
     }
 
     const messageText = template.replace("[student_name]", studentName);

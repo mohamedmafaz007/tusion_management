@@ -93,4 +93,5 @@ export interface AppSettings {
   whatsappSenderNumber?: string;
   whatsappTemplatePresent?: string;
   whatsappTemplateAbsent?: string;
+  whatsappTemplateWelcome?: string;
 }

@@ -178,6 +178,17 @@ function SettingsPage() {
                 />
               </Fld>
             </div>
+
+            <div className="md:col-span-2">
+              <Fld label="Welcome Alert Template">
+                <Textarea
+                  rows={2}
+                  value={draft.whatsappTemplateWelcome || ""}
+                  onChange={(e) => setDraft({ ...draft, whatsappTemplateWelcome: e.target.value })}
+                  placeholder="Use [student_name] as placeholder"
+                />
+              </Fld>
+            </div>
           </div>
         </div>
 
