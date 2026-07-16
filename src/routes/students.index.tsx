@@ -51,7 +51,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/students/")({
   head: () => ({
     meta: [
-      { title: "Students — Bright Minds Tuition" },
+      { title: "Students — Vishwa Tuition Center" },
       { name: "description", content: "Manage all registered students with search, filters, and CRUD actions." },
     ],
   }),

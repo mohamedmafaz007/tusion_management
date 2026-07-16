@@ -43,7 +43,7 @@ type FormValues = z.infer<typeof schema>;
 export const Route = createFileRoute("/students/new")({
   head: () => ({
     meta: [
-      { title: "Register Student — Bright Minds Tuition" },
+      { title: "Register Student — Vishwa Tuition Center" },
       { name: "description", content: "Enroll a new student into the tuition center." },
     ],
   }),
@@ -93,9 +93,10 @@ function NewStudentPage() {
   };
 
   const onSubmit = async (data: FormValues) => {
-    setStudentsState([
+    const studentId = uid();
+    await setStudentsState([
       ...students,
-      { ...data, id: uid(), photo, createdAt: new Date().toISOString() },
+      { ...data, id: studentId, photo, createdAt: new Date().toISOString() },
     ]);
     toast.success(`${data.name} registered successfully!`);
 
@@ -104,7 +105,7 @@ function NewStudentPage() {
     if (parentMobile) {
       const provider = settings.whatsappProvider || "manual";
       const template = settings.whatsappTemplateWelcome || 
-        "Dear Parent, thank you for registering [student_name] at Bright Minds Tuition. We are excited to guide them on their academic journey. Regards, Prof. Anita Sharma.";
+        "Dear Parent, thank you for registering [student_name] at Vishwa Tuition Center. We are excited to guide them on their academic journey. Regards, Prof. Anita Sharma.";
       const messageText = template.replace("[student_name]", data.name);
 
       if (provider === "manual") {
@@ -118,7 +119,8 @@ function NewStudentPage() {
           data: {
             recipientPhone: parentMobile,
             studentName: data.name,
-            status: "Welcome"
+            status: "Welcome",
+            studentId
           }
         }).catch((err) => {
           console.error("Failed to send automated welcome WhatsApp alert:", err);

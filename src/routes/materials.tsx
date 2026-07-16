@@ -27,7 +27,7 @@ import { getDbMaterials, isDbConfigured } from "@/lib/db";
 export const Route = createFileRoute("/materials")({
   head: () => ({
     meta: [
-      { title: "Study Materials — Bright Minds Tuition" },
+      { title: "Study Materials — Vishwa Tuition Center" },
       { name: "description", content: "Upload and organize notes, question papers, and study materials by class." },
     ],
   }),

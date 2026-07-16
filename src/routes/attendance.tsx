@@ -35,7 +35,7 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export const Route = createFileRoute("/attendance")({
   head: () => ({
     meta: [
-      { title: "Attendance — Bright Minds Tuition" },
+      { title: "Attendance — Vishwa Tuition Center" },
       { name: "description", content: "Mark daily attendance for students by class." },
     ],
   }),

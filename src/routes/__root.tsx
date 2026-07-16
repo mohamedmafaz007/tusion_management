@@ -79,14 +79,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Bright Minds — Tuition Management Dashboard" },
+      { title: "Vishwa Tuition Center — Tuition Management Dashboard" },
       {
         name: "description",
         content:
           "Premium tuition management dashboard for tracking students, attendance, fees, and study materials with a modern glassmorphism UI.",
       },
-      { name: "author", content: "Bright Minds" },
-      { property: "og:title", content: "Bright Minds — Tuition Management Dashboard" },
+      { name: "author", content: "Vishwa Tuition Center" },
+      { property: "og:title", content: "Vishwa Tuition Center — Tuition Management Dashboard" },
       {
         property: "og:description",
         content: "Manage students, attendance, fees and study materials in one premium admin dashboard.",

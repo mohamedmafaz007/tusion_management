@@ -358,6 +358,7 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
     recipientPhone: string; 
     studentName: string; 
     status: string; 
+    studentId?: string;
   }) => data)
   .handler(async ({ data }) => {
     const settings = await getDbSettings();
@@ -368,7 +369,7 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
       return { success: true, manual: true };
     }
 
-    const { recipientPhone, studentName, status } = data;
+    const { recipientPhone, studentName, status, studentId } = data;
     
     let template = "";
     if (status === "Present") {
@@ -381,7 +382,7 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
       
     if (!template) {
       template = status === "Welcome"
-        ? `Dear Parent, thank you for registering [student_name] at Bright Minds Tuition.`
+        ? `Dear Parent, thank you for registering [student_name] at Vishwa Tuition Center.`
         : `Dear Parent, your child [student_name] was marked ${status} today.`;
     }
 
@@ -449,6 +450,60 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
     if (provider === "baileys") {
       const ws = await getWhatsAppService();
       if (!ws) throw new Error("WhatsApp service only available on server");
+
+      if (status === "Welcome") {
+        const sql = await getSql();
+        let student = null;
+        if (sql) {
+          let rows = [];
+          if (studentId) {
+            rows = await sql`SELECT * FROM students WHERE id = ${studentId}`;
+          } else {
+            rows = await sql`SELECT * FROM students WHERE name = ${studentName} ORDER BY "createdAt" DESC LIMIT 1`;
+          }
+          if (rows.length > 0) {
+            student = rows[0];
+          }
+        }
+
+        if (student) {
+          try {
+            const pdfBuffer = await ws.generateRegistrationPdf({
+              instituteName: settings.instituteName || "Vishwa Tuition Center",
+              address: settings.address || "",
+              contact: settings.contact || "",
+              student: {
+                name: student.name,
+                gender: student.gender,
+                dob: student.dob,
+                school: student.school,
+                standard: student.standard,
+                section: student.section,
+                parentName: student.parentName,
+                fatherMobile: student.fatherMobile,
+                motherMobile: student.motherMobile,
+                address: student.address,
+                joiningDate: student.joiningDate,
+                monthlyFees: Number(student.monthlyFees),
+                admissionFees: Number(student.admissionFees),
+                notes: student.notes || "",
+                photo: student.photo || ""
+              }
+            });
+
+            await ws.sendWhatsAppMessageWithPDF(
+              phone,
+              messageText,
+              pdfBuffer,
+              `Application_Form_${student.name.replace(/\s+/g, "_")}.pdf`
+            );
+            return { success: true, automated: true };
+          } catch (pdfErr) {
+            console.error("Failed to generate and send welcome registration PDF, falling back to text:", pdfErr);
+          }
+        }
+      }
+
       await ws.sendWhatsAppTextMessage(phone, messageText);
       return { success: true, automated: true };
     }

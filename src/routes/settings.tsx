@@ -19,7 +19,7 @@ import { getBaileysStatus, connectBaileys, disconnectBaileys } from "@/lib/db";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — Bright Minds Tuition" },
+      { title: "Settings — Vishwa Tuition Center" },
       { name: "description", content: "Configure institute details, theme, notifications and preferences." },
     ],
   }),

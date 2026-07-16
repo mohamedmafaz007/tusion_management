@@ -39,7 +39,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/fees")({
   head: () => ({
     meta: [
-      { title: "Fees — Bright Minds Tuition" },
+      { title: "Fees — Vishwa Tuition Center" },
       { name: "description", content: "Track fee payments, generate receipts, and view fee history." },
     ],
   }),

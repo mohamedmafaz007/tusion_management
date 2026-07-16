@@ -35,7 +35,7 @@ import { studentAttendancePct } from "@/lib/derive";
 export const Route = createFileRoute("/reports")({
   head: () => ({
     meta: [
-      { title: "Attendance Reports — Bright Minds Tuition" },
+      { title: "Attendance Reports — Vishwa Tuition Center" },
       { name: "description", content: "Beautiful charts and analytics for attendance trends." },
     ],
   }),

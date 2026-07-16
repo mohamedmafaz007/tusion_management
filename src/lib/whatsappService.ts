@@ -13,10 +13,26 @@ import PDFDocument from "pdfkit";
 const authInfoPath = path.join(process.cwd(), "auth_info");
 const logger = pino({ level: "silent" });
 
-let sock: any = null;
-let connectionStatus: "disconnected" | "connecting" | "qrcode" | "connected" = "disconnected";
-let qrCodeDataUrl: string = "";
-let isInitializing = false;
+// Use globalThis to persist the singleton connection state across Vite HMR hot reloads
+interface GlobalWhatsApp {
+  sock: any;
+  connectionStatus: "disconnected" | "connecting" | "qrcode" | "connected";
+  qrCodeDataUrl: string;
+  isInitializing: boolean;
+}
+
+const g = globalThis as unknown as { __whatsapp?: GlobalWhatsApp };
+
+if (!g.__whatsapp) {
+  g.__whatsapp = {
+    sock: null,
+    connectionStatus: "disconnected",
+    qrCodeDataUrl: "",
+    isInitializing: false,
+  };
+}
+
+const wsState = g.__whatsapp;
 
 /**
  * Clean phone number and convert to international format (adding 91 for India if 10 digits).
@@ -33,21 +49,21 @@ export function formatPhoneNumber(phone: string): string {
  * Initializes the WhatsApp connection using Baileys and multi-file authentication state.
  */
 export async function initWhatsApp(forceRestart = false) {
-  if (isInitializing) return;
-  if (sock && connectionStatus === "connected" && !forceRestart) {
+  if (wsState.isInitializing) return;
+  if (wsState.sock && wsState.connectionStatus === "connected" && !forceRestart) {
     return;
   }
 
-  isInitializing = true;
-  connectionStatus = "connecting";
-  qrCodeDataUrl = "";
+  wsState.isInitializing = true;
+  wsState.connectionStatus = "connecting";
+  wsState.qrCodeDataUrl = "";
 
   try {
-    if (sock && forceRestart) {
+    if (wsState.sock && forceRestart) {
       try {
-        sock.end(undefined);
+        wsState.sock.end(undefined);
       } catch (e) {}
-      sock = null;
+      wsState.sock = null;
     }
 
     if (!fs.existsSync(authInfoPath)) {
@@ -57,7 +73,7 @@ export async function initWhatsApp(forceRestart = false) {
     const { state, saveCreds } = await useMultiFileAuthState(authInfoPath);
     const { version } = await fetchLatestBaileysVersion();
 
-    sock = makeWASocket({
+    wsState.sock = makeWASocket({
       version,
       auth: {
         creds: state.creds,
@@ -67,15 +83,15 @@ export async function initWhatsApp(forceRestart = false) {
       logger: logger as any,
     });
 
-    sock.ev.on("creds.update", saveCreds);
+    wsState.sock.ev.on("creds.update", saveCreds);
 
-    sock.ev.on("connection.update", async (update: any) => {
+    wsState.sock.ev.on("connection.update", async (update: any) => {
       const { connection, lastDisconnect, qr } = update;
 
       if (qr) {
-        connectionStatus = "qrcode";
+        wsState.connectionStatus = "qrcode";
         try {
-          qrCodeDataUrl = await QRCode.toDataURL(qr);
+          wsState.qrCodeDataUrl = await QRCode.toDataURL(qr);
         } catch (err) {
           console.error("Failed to generate QR Data URL:", err);
         }
@@ -83,11 +99,11 @@ export async function initWhatsApp(forceRestart = false) {
 
       if (connection === "close") {
         const statusCode = (lastDisconnect?.error as any)?.output?.statusCode;
-        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut && statusCode !== 401;
 
-        connectionStatus = "disconnected";
-        qrCodeDataUrl = "";
-        sock = null;
+        wsState.connectionStatus = "disconnected";
+        wsState.qrCodeDataUrl = "";
+        wsState.sock = null;
 
         console.log(`WhatsApp connection closed. StatusCode: ${statusCode}. Reconnecting: ${shouldReconnect}`);
 
@@ -97,18 +113,18 @@ export async function initWhatsApp(forceRestart = false) {
           }, 3000);
         }
       } else if (connection === "open") {
-        connectionStatus = "connected";
-        qrCodeDataUrl = "";
+        wsState.connectionStatus = "connected";
+        wsState.qrCodeDataUrl = "";
         console.log("WhatsApp connection successfully opened!");
       }
     });
   } catch (err) {
     console.error("Failed to initialize WhatsApp connection:", err);
-    connectionStatus = "disconnected";
-    qrCodeDataUrl = "";
-    sock = null;
+    wsState.connectionStatus = "disconnected";
+    wsState.qrCodeDataUrl = "";
+    wsState.sock = null;
   } finally {
-    isInitializing = false;
+    wsState.isInitializing = false;
   }
 }
 
@@ -116,13 +132,13 @@ export async function initWhatsApp(forceRestart = false) {
  * Returns the current WhatsApp pairing status and QR code Data URL.
  */
 export function getWhatsAppStatus() {
-  if (sock === null && fs.existsSync(path.join(authInfoPath, "creds.json"))) {
+  if (wsState.sock === null && fs.existsSync(path.join(authInfoPath, "creds.json"))) {
     initWhatsApp().catch((e) => console.error("Failed to auto-init WhatsApp connection:", e));
   }
 
   return {
-    status: connectionStatus,
-    qr: qrCodeDataUrl,
+    status: wsState.connectionStatus,
+    qr: wsState.qrCodeDataUrl,
   };
 }
 
@@ -131,18 +147,18 @@ export function getWhatsAppStatus() {
  */
 export async function disconnectWhatsApp() {
   console.log("Disconnecting WhatsApp client...");
-  if (sock) {
+  if (wsState.sock) {
     try {
-      await sock.logout();
+      await wsState.sock.logout();
     } catch (e) {}
     try {
-      sock.end(undefined);
+      wsState.sock.end(undefined);
     } catch (e) {}
-    sock = null;
+    wsState.sock = null;
   }
 
-  connectionStatus = "disconnected";
-  qrCodeDataUrl = "";
+  wsState.connectionStatus = "disconnected";
+  wsState.qrCodeDataUrl = "";
 
   if (fs.existsSync(authInfoPath)) {
     try {
@@ -174,7 +190,6 @@ export function generateReceiptPdf(data: {
 }): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
-      // A5 dimensions: width 595, height 420.
       const doc = new PDFDocument({ size: "A5", margin: 25, layout: "landscape" });
       const chunks: Buffer[] = [];
 
@@ -295,6 +310,199 @@ export function generateReceiptPdf(data: {
 }
 
 /**
+ * Generates an A4 student registration application form.
+ */
+export function generateRegistrationPdf(data: {
+  instituteName: string;
+  address: string;
+  contact: string;
+  student: {
+    name: string;
+    gender: string;
+    dob: string;
+    school: string;
+    standard: string;
+    section: string;
+    parentName: string;
+    fatherMobile: string;
+    motherMobile: string;
+    address: string;
+    joiningDate: string;
+    monthlyFees: number;
+    admissionFees: number;
+    notes?: string;
+    photo?: string;
+  }
+}): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ size: "A4", margin: 40 });
+      const chunks: Buffer[] = [];
+
+      doc.on("data", (chunk) => chunks.push(chunk));
+      doc.on("end", () => resolve(Buffer.concat(chunks)));
+      doc.on("error", (err) => reject(err));
+
+      const primaryColor = "#1e293b"; // dark slate
+      const accentColor = "#4f46e5";  // indigo
+      const textColor = "#334155";    // slate text
+      const dividerColor = "#e2e8f0";
+
+      // Background decorative border
+      doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40)
+         .lineWidth(1)
+         .strokeColor(accentColor)
+         .stroke();
+
+      // Header Banner
+      doc.fillColor(accentColor)
+         .font("Helvetica-Bold")
+         .fontSize(22)
+         .text(data.instituteName || "Vishwa Tuition Center", 45, 45, { align: "center" });
+
+      doc.fillColor(textColor)
+         .font("Helvetica")
+         .fontSize(9)
+         .text(data.address || "", 45, 75, { align: "center" });
+      doc.text(`Contact: ${data.contact || ""}`, 45, 88, { align: "center" });
+
+      doc.moveTo(45, 105)
+         .lineTo(doc.page.width - 45, 105)
+         .lineWidth(1.5)
+         .strokeColor(accentColor)
+         .stroke();
+
+      // Form Title
+      doc.fillColor(primaryColor)
+         .font("Helvetica-Bold")
+         .fontSize(15)
+         .text("STUDENT ADMISSION APPLICATION FORM", 45, 120, { align: "center" });
+
+      // If student photo is present, draw it, otherwise draw a box
+      const photoWidth = 90;
+      const photoHeight = 110;
+      const photoX = doc.page.width - 45 - photoWidth;
+      const photoY = 150;
+
+      doc.rect(photoX, photoY, photoWidth, photoHeight)
+         .lineWidth(1)
+         .strokeColor("#94a3b8")
+         .stroke();
+
+      if (data.student.photo && data.student.photo.startsWith("data:image")) {
+        try {
+          doc.image(data.student.photo, photoX + 2, photoY + 2, { width: photoWidth - 4, height: photoHeight - 4 });
+        } catch (e) {
+          doc.fillColor("#94a3b8")
+             .font("Helvetica")
+             .fontSize(8)
+             .text("PHOTO SLOT", photoX + 15, photoY + 50);
+        }
+      } else {
+        doc.fillColor("#94a3b8")
+           .font("Helvetica")
+           .fontSize(8)
+           .text("PASTE PHOTO\nHERE", photoX, photoY + 45, { width: photoWidth, align: "center" });
+      }
+
+      // Fields left column
+      const fieldsX = 45;
+      let currY = 155;
+
+      const drawField = (label: string, value: string, gap = 18) => {
+        doc.fillColor("#64748b")
+           .font("Helvetica-Bold")
+           .fontSize(9.5)
+           .text(`${label}:`, fieldsX, currY);
+
+        doc.fillColor(primaryColor)
+           .font("Helvetica")
+           .fontSize(10)
+           .text(value || "—", fieldsX + 120, currY);
+
+        currY += gap;
+      };
+
+      drawField("Application ID", `VTC-${Math.random().toString(36).substr(2, 6).toUpperCase()}`);
+      drawField("Full Name", data.student.name);
+      drawField("Gender", data.student.gender);
+      drawField("Date of Birth", data.student.dob);
+      drawField("School", data.student.school);
+      drawField("Standard", `${data.student.standard} (${data.student.section || "A"})`);
+      drawField("Date of Joining", data.student.joiningDate);
+
+      // Section divider
+      currY = Math.max(currY, photoY + photoHeight + 15);
+      doc.moveTo(45, currY)
+         .lineTo(doc.page.width - 45, currY)
+         .lineWidth(0.5)
+         .strokeColor(dividerColor)
+         .stroke();
+      currY += 12;
+
+      // Parent Details Section
+      doc.fillColor(accentColor)
+         .font("Helvetica-Bold")
+         .fontSize(11)
+         .text("PARENT & CONTACT INFORMATION", 45, currY);
+      currY += 18;
+
+      drawField("Parent/Guardian", data.student.parentName);
+      drawField("Father Mobile", data.student.fatherMobile);
+      drawField("Mother Mobile", data.student.motherMobile);
+      drawField("Residential Address", data.student.address, 24);
+
+      // Section divider
+      doc.moveTo(45, currY)
+         .lineTo(doc.page.width - 45, currY)
+         .lineWidth(0.5)
+         .strokeColor(dividerColor)
+         .stroke();
+      currY += 12;
+
+      // Fee details
+      doc.fillColor(accentColor)
+         .font("Helvetica-Bold")
+         .fontSize(11)
+         .text("FEE STRUCTURE & NOTES", 45, currY);
+      currY += 18;
+
+      drawField("Admission Fee", `Rs. ${data.student.admissionFees}`);
+      drawField("Monthly Tuition Fee", `Rs. ${data.student.monthlyFees}`);
+      if (data.student.notes) {
+        drawField("Additional Notes", data.student.notes, 24);
+      }
+
+      // Signatures at bottom
+      const sigY = doc.page.height - 95;
+      doc.moveTo(45, sigY)
+         .lineTo(175, sigY)
+         .moveTo(doc.page.width - 175, sigY)
+         .lineTo(doc.page.width - 45, sigY)
+         .lineWidth(0.5)
+         .strokeColor("#94a3b8")
+         .stroke();
+
+      doc.fillColor("#64748b")
+         .font("Helvetica")
+         .fontSize(8.5)
+         .text("Parent/Guardian Signature", 45, sigY + 5, { width: 130, align: "center" })
+         .text("Office Administrator", doc.page.width - 175, sigY + 5, { width: 130, align: "center" });
+
+      // Footer
+      doc.fillColor("#94a3b8")
+         .font("Helvetica-Oblique")
+         .fontSize(7.5)
+         .text("This application form details the registered profile in Vishwa Tuition Center database.", 45, doc.page.height - 35, { align: "center" });
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+/**
  * Sends a PDF receipt to a parent.
  */
 export async function sendWhatsAppMessageWithPDF(
@@ -303,15 +511,15 @@ export async function sendWhatsAppMessageWithPDF(
   pdfBuffer: Buffer,
   fileName: string
 ) {
-  if (!sock || connectionStatus !== "connected") {
+  if (!wsState.sock || wsState.connectionStatus !== "connected") {
     await initWhatsApp();
     let retries = 0;
-    while (connectionStatus !== "connected" && retries < 5) {
+    while (wsState.connectionStatus !== "connected" && retries < 5) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       retries++;
     }
 
-    if (connectionStatus !== "connected") {
+    if (wsState.connectionStatus !== "connected") {
       throw new Error("WhatsApp client is not connected. Please scan the QR code first in settings.");
     }
   }
@@ -319,7 +527,7 @@ export async function sendWhatsAppMessageWithPDF(
   const formattedPhone = formatPhoneNumber(phone);
   const jid = `${formattedPhone}@s.whatsapp.net`;
 
-  const result = await sock.sendMessage(jid, {
+  const result = await wsState.sock.sendMessage(jid, {
     document: pdfBuffer,
     mimetype: "application/pdf",
     fileName: fileName,
@@ -333,15 +541,15 @@ export async function sendWhatsAppMessageWithPDF(
  * Sends a standard text alert (welcome or attendance).
  */
 export async function sendWhatsAppTextMessage(phone: string, text: string) {
-  if (!sock || connectionStatus !== "connected") {
+  if (!wsState.sock || wsState.connectionStatus !== "connected") {
     await initWhatsApp();
     let retries = 0;
-    while (connectionStatus !== "connected" && retries < 5) {
+    while (wsState.connectionStatus !== "connected" && retries < 5) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       retries++;
     }
 
-    if (connectionStatus !== "connected") {
+    if (wsState.connectionStatus !== "connected") {
       throw new Error("WhatsApp client is not connected. Please scan the QR code first in settings.");
     }
   }
@@ -349,6 +557,6 @@ export async function sendWhatsAppTextMessage(phone: string, text: string) {
   const formattedPhone = formatPhoneNumber(phone);
   const jid = `${formattedPhone}@s.whatsapp.net`;
 
-  const result = await sock.sendMessage(jid, { text });
+  const result = await wsState.sock.sendMessage(jid, { text });
   return result;
 }

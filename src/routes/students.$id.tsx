@@ -28,7 +28,7 @@ import { Users, CalendarCheck, Wallet, BookOpen } from "lucide-react";
 export const Route = createFileRoute("/students/$id")({
   head: () => ({
     meta: [
-      { title: "Student Profile — Bright Minds Tuition" },
+      { title: "Student Profile — Vishwa Tuition Center" },
       { name: "description", content: "Detailed student profile with attendance, fees, and performance." },
     ],
   }),

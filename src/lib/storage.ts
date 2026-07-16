@@ -54,7 +54,7 @@ export const setMaterials = (v: Material[]) => write(KEYS.materials, v);
 
 // Settings
 export const DEFAULT_SETTINGS: AppSettings = {
-  instituteName: "Bright Minds Tuition",
+  instituteName: "Vishwa Tuition Center",
   teacherName: "Prof. Anita Sharma",
   contact: "+91 98765 43210",
   address: "12 MG Road, Bengaluru, IN",
@@ -62,9 +62,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   notifications: true,
   language: "English",
   whatsappProvider: "manual",
-  whatsappTemplatePresent: "Dear Parent, your child [student_name] was PRESENT at Bright Minds Tuition today. Regards, Anita Sharma.",
-  whatsappTemplateAbsent: "Dear Parent, your child [student_name] was ABSENT from Bright Minds Tuition today. Please check with them. Regards, Anita Sharma.",
-  whatsappTemplateWelcome: "Dear Parent, thank you for registering [student_name] at Bright Minds Tuition. We are excited to guide them on their academic journey. Regards, Prof. Anita Sharma.",
+  whatsappTemplatePresent: "Dear Parent, your child [student_name] was PRESENT at Vishwa Tuition Center today. Regards, Anita Sharma.",
+  whatsappTemplateAbsent: "Dear Parent, your child [student_name] was ABSENT from Vishwa Tuition Center today. Please check with them. Regards, Anita Sharma.",
+  whatsappTemplateWelcome: "Dear Parent, thank you for registering [student_name] at Vishwa Tuition Center. We are excited to guide them on their academic journey. Regards, Prof. Anita Sharma.",
 };
 export const getSettings = () => read<AppSettings>(KEYS.settings, DEFAULT_SETTINGS);
 export const setSettings = (v: AppSettings) => write(KEYS.settings, v);

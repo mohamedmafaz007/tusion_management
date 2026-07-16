@@ -37,7 +37,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Bright Minds Tuition" },
+      { title: "Dashboard — Vishwa Tuition Center" },
       { name: "description", content: "Overview of students, attendance, and fee collection." },
     ],
   }),
