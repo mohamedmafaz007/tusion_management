@@ -63,8 +63,8 @@ const PAGE_SIZE = 8;
 function StudentsPage() {
   const hydrated = useHydrated();
   const [students, setStudentsState] = useStudents();
-  const [attendance] = useAttendance();
-  const [fees] = useFees();
+  const [attendance, setAttendanceState] = useAttendance();
+  const [fees, setFeesState] = useFees();
   const navigate = useNavigate();
 
   const url = typeof window !== "undefined" ? new URL(window.location.href) : null;
@@ -107,6 +107,8 @@ function StudentsPage() {
   const handleDelete = () => {
     if (!deleteId) return;
     setStudentsState(students.filter((s) => s.id !== deleteId));
+    setAttendanceState(attendance.filter((a) => a.studentId !== deleteId));
+    setFeesState(fees.filter((f) => f.studentId !== deleteId));
     toast.success("Student deleted");
     setDeleteId(null);
   };

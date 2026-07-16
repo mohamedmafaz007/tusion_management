@@ -39,7 +39,7 @@ function StudentProfilePage() {
   const { id } = Route.useParams();
   const hydrated = useHydrated();
   const [students, setStudentsState] = useStudents();
-  const [attendance] = useAttendance();
+  const [attendance, setAttendanceState] = useAttendance();
   const [fees, setFeesState] = useFees();
   const [materials] = useMaterials();
   const navigate = useNavigate();
@@ -140,6 +140,8 @@ function StudentProfilePage() {
 
   const del = () => {
     setStudentsState(students.filter((s) => s.id !== id));
+    setAttendanceState(attendance.filter((a) => a.studentId !== id));
+    setFeesState(fees.filter((f) => f.studentId !== id));
     toast.success("Student deleted");
     navigate({ to: "/students" });
   };

@@ -14,7 +14,15 @@ import { useSettings } from "@/lib/hooks";
 import { DEFAULT_SETTINGS } from "@/lib/storage";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { getBaileysStatus, connectBaileys, disconnectBaileys } from "@/lib/db";
+import {
+  getBaileysStatus,
+  connectBaileys,
+  disconnectBaileys,
+  syncDbStudents,
+  syncDbAttendance,
+  syncDbFees,
+  syncDbMaterials
+} from "@/lib/db";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -391,16 +399,32 @@ function SettingsPage() {
 
             <div className="rounded-xl border border-border/60 p-4">
               <div className="font-medium">Data</div>
-              <p className="mt-1 text-xs text-muted-foreground">All data is stored locally in your browser. Clearing site data removes it.</p>
+              <p className="mt-1 text-xs text-muted-foreground">All data (except settings) will be permanently cleared from both this browser and the cloud database.</p>
               <Button
                 variant="destructive"
                 size="sm"
                 className="mt-3 rounded-lg"
-                onClick={() => {
-                  if (confirm("Clear ALL local data (students, attendance, fees, materials)?")) {
-                    localStorage.clear();
-                    toast.success("All data cleared. Reloading…");
-                    setTimeout(() => window.location.reload(), 700);
+                onClick={async () => {
+                  if (confirm("Clear ALL local data (students, attendance, fees, materials) and database tables (except settings)? This action cannot be undone.")) {
+                    try {
+                      // 1. Clear cloud database tables by syncing empty arrays
+                      await syncDbStudents({ data: [] });
+                      await syncDbAttendance({ data: [] });
+                      await syncDbFees({ data: [] });
+                      await syncDbMaterials({ data: [] });
+
+                      // 2. Clear local storage keys (excluding settings)
+                      localStorage.removeItem("students");
+                      localStorage.removeItem("attendance");
+                      localStorage.removeItem("fees");
+                      localStorage.removeItem("materials");
+
+                      toast.success("All data (except settings) cleared successfully. Reloading…");
+                      setTimeout(() => window.location.reload(), 700);
+                    } catch (err: any) {
+                      console.error("Failed to clear cloud database:", err);
+                      toast.error(`Failed to clear database data: ${err.message || err}`);
+                    }
                   }
                 }}
               >
