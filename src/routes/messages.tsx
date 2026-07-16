@@ -253,7 +253,7 @@ function MessageLogsPage() {
           label="Failed Deliveries" 
           value={stats.failed} 
           icon={<AlertCircle className="h-5 w-5" />} 
-          className={stats.failed > 0 ? "border-red-500/20" : ""}
+          hint={stats.failed > 0 ? "Check logs below" : undefined}
         />
         
         {/* WhatsApp Connection Card */}
