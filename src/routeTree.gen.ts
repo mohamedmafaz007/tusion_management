@@ -20,6 +20,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as StudentsIndexRouteImport } from './routes/students.index'
 import { Route as StudentsNewRouteImport } from './routes/students.new'
 import { Route as StudentsIdRouteImport } from './routes/students.$id'
+import { Route as ApiCronRouteImport } from './routes/api.cron'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -76,6 +77,11 @@ const StudentsIdRoute = StudentsIdRouteImport.update({
   path: '/students/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronRoute = ApiCronRouteImport.update({
+  id: '/api/cron',
+  path: '/api/cron',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/cron': typeof ApiCronRoute
   '/students/$id': typeof StudentsIdRoute
   '/students/new': typeof StudentsNewRoute
   '/students/': typeof StudentsIndexRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/cron': typeof ApiCronRoute
   '/students/$id': typeof StudentsIdRoute
   '/students/new': typeof StudentsNewRoute
   '/students': typeof StudentsIndexRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/cron': typeof ApiCronRoute
   '/students/$id': typeof StudentsIdRoute
   '/students/new': typeof StudentsNewRoute
   '/students/': typeof StudentsIndexRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/sitemap.xml'
+    | '/api/cron'
     | '/students/$id'
     | '/students/new'
     | '/students/'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/sitemap.xml'
+    | '/api/cron'
     | '/students/$id'
     | '/students/new'
     | '/students'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/sitemap.xml'
+    | '/api/cron'
     | '/students/$id'
     | '/students/new'
     | '/students/'
@@ -168,6 +180,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiCronRoute: typeof ApiCronRoute
   StudentsIdRoute: typeof StudentsIdRoute
   StudentsNewRoute: typeof StudentsNewRoute
   StudentsIndexRoute: typeof StudentsIndexRoute
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron': {
+      id: '/api/cron'
+      path: '/api/cron'
+      fullPath: '/api/cron'
+      preLoaderRoute: typeof ApiCronRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -264,6 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiCronRoute: ApiCronRoute,
   StudentsIdRoute: StudentsIdRoute,
   StudentsNewRoute: StudentsNewRoute,
   StudentsIndexRoute: StudentsIndexRoute,
