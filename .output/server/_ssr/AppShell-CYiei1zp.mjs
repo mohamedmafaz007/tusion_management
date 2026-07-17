@@ -4,7 +4,7 @@ import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { P as require_jsx_runtime, d as DialogContent, f as DialogDescription, g as DialogTrigger, h as DialogTitle, l as Dialog, m as DialogPortal, p as DialogOverlay, u as DialogClose } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { i as Input, j as useSettings, k as useHydrated, n as Button, t as Badge, u as cn } from "./hooks-BIRdQpF6.mjs";
-import { A as LayoutDashboard, E as Menu, M as GraduationCap, O as LogOut, T as MessageSquare, U as Clock, W as Circle, Z as ChevronRight, a as UserPlus, at as CalendarCheck, d as Sun, et as Check, f as Settings, m as Search, n as Wallet, nt as ChartColumn, ot as BookOpen, r as Users, st as Bell, t as X, w as Moon } from "../_libs/lucide-react.mjs";
+import { A as LayoutDashboard, E as Menu, G as Circle, M as GraduationCap, O as LogOut, Q as ChevronRight, T as MessageSquare, W as Clock, a as UserPlus, ct as Bell, d as Sun, f as Settings, m as Search, n as Wallet, ot as CalendarCheck, r as Users, rt as ChartColumn, st as BookOpen, t as X, tt as Check, w as Moon } from "../_libs/lucide-react.mjs";
 import { n as AvatarFallback$1, r as AvatarImage$1, t as Avatar$1 } from "../_libs/radix-ui__react-avatar.mjs";
 import { a as Label2, c as Root2, d as SubTrigger2, f as Trigger, i as ItemIndicator2, l as Separator2, n as Content2, o as Portal2, r as Item2, s as RadioItem2, t as CheckboxItem2, u as SubContent2 } from "../_libs/@radix-ui/react-dropdown-menu+[...].mjs";
 import { n as toast } from "../_libs/sonner.mjs";

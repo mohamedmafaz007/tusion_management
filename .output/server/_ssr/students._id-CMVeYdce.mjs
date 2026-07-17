@@ -3,7 +3,7 @@ import { _ as useNavigate, g as Link } from "../_libs/@tanstack/react-router+[..
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { P as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { A as useMaterials, D as useAttendance, E as uid, M as useStudents, O as useFees, i as Input, k as useHydrated, n as Button, t as Badge } from "./hooks-BIRdQpF6.mjs";
-import { C as Pencil, D as MapPin, S as Phone, at as CalendarCheck, g as Save, h as School, it as Calendar, n as Wallet, ot as BookOpen, t as X, u as Trash2, ut as ArrowLeft } from "../_libs/lucide-react.mjs";
+import { C as Pencil, D as MapPin, S as Phone, at as Calendar, dt as ArrowLeft, g as Save, h as School, n as Wallet, ot as CalendarCheck, st as BookOpen, t as X, u as Trash2 } from "../_libs/lucide-react.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
 import { t as StatCard } from "./StatCard-FGY_DRrL.mjs";
 import { n as FeeStatusBadge, t as AttendanceStatusBadge } from "./StatusBadges-Q6qM8xxp.mjs";

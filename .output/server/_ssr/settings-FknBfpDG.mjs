@@ -2,7 +2,7 @@ import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { P as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { C as syncDbFees, S as syncDbAttendance, T as syncDbStudents, d as connectBaileys, i as Input, j as useSettings, m as getBaileysStatus, n as Button, p as disconnectBaileys, r as DEFAULT_SETTINGS, u as cn, w as syncDbMaterials } from "./hooks-BIRdQpF6.mjs";
-import { J as CircleCheckBig, d as Sun, g as Save, k as LoaderCircle, s as Upload, st as Bell, w as Moon } from "../_libs/lucide-react.mjs";
+import { Y as CircleCheckBig, ct as Bell, d as Sun, g as Save, k as LoaderCircle, s as Upload, w as Moon } from "../_libs/lucide-react.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
 import { n as PageHeader } from "./AppShell-CYiei1zp.mjs";
 import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-v0Zn4H8T.mjs";

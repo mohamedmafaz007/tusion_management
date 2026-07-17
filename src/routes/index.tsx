@@ -1,5 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Users,
   UserCheck,
@@ -11,12 +10,22 @@ import {
   CalendarCheck,
   BarChart3,
   ArrowRight,
+  Download,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/AppShell";
 import { StatCard } from "@/components/StatCard";
 import { useAttendance, useFees, useHydrated, useStudents } from "@/lib/hooks";
 import { currentMonthKey, formatCurrency, initials, studentAvatarStyle, todayKey } from "@/lib/derive";
 import { STANDARDS } from "@/lib/types";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Bar,
   BarChart,
@@ -49,6 +58,107 @@ function DashboardPage() {
   const [students] = useStudents();
   const [attendance] = useAttendance();
   const [fees] = useFees();
+
+  const availableMonths = useMemo(() => {
+    const months = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+      months.push({ value: val, label });
+    }
+    return months;
+  }, []);
+
+  const [reportMonth, setReportMonth] = useState(availableMonths[0].value);
+
+  const downloadMonthlyReport = () => {
+    const headers = [
+      "Student Name",
+      "Standard",
+      "Section",
+      "Gender",
+      "Parent Name",
+      "Father Mobile",
+      "Mother Mobile",
+      "Monthly Fee",
+      `Fee Status (${reportMonth})`,
+      `Paid Amount (${reportMonth})`,
+      `Payment Date (${reportMonth})`,
+      `Present Days (${reportMonth})`,
+      `Absent Days (${reportMonth})`,
+      `Late Days (${reportMonth})`,
+      `Attendance % (${reportMonth})`
+    ];
+
+    const rows = students.map((s) => {
+      const sFee = fees.find((f) => f.studentId === s.id && f.month === reportMonth);
+      const feeStatus = sFee ? sFee.status : "Pending";
+      const paidAmount = sFee ? sFee.paidAmount : 0;
+      const paidDate = sFee && sFee.paidDate ? sFee.paidDate : "—";
+
+      const mRecs = attendance.filter(
+        (r) => r.studentId === s.id && r.date.startsWith(reportMonth) && r.status !== "Holiday"
+      );
+
+      const uniqueDates = new Map<string, typeof mRecs[0]>();
+      for (const r of mRecs) {
+        uniqueDates.set(r.date, r);
+      }
+      const uniqueMRecs = Array.from(uniqueDates.values());
+
+      const totalDays = uniqueMRecs.length;
+      const present = uniqueMRecs.filter((r) => r.status === "Present").length;
+      const absent = uniqueMRecs.filter((r) => r.status === "Absent").length;
+      const late = uniqueMRecs.filter((r) => r.status === "Late").length;
+      
+      const totalPresent = present + late;
+      const attPct = totalDays ? Math.round((totalPresent / totalDays) * 100) : 100;
+
+      return [
+        s.name,
+        s.standard,
+        s.section || "—",
+        s.gender || "—",
+        s.parentName || "—",
+        s.fatherMobile || "—",
+        s.motherMobile || "—",
+        s.monthlyFees,
+        feeStatus,
+        paidAmount,
+        paidDate,
+        present,
+        absent,
+        late,
+        `${attPct}%`
+      ];
+    });
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row
+          .map((val) => {
+            const strVal = String(val === undefined || val === null ? "" : val);
+            if (strVal.includes(",") || strVal.includes('"') || strVal.includes("\n")) {
+              return `"${strVal.replace(/"/g, '""')}"`;
+            }
+            return strVal;
+          })
+          .join(",")
+      )
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `Monthly_Report_${reportMonth}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const stats = useMemo(() => {
     const today = todayKey();
@@ -146,6 +256,25 @@ function DashboardPage() {
       <PageHeader
         title="Dashboard"
         description="A quick overview of your institute today."
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={reportMonth} onValueChange={setReportMonth}>
+              <SelectTrigger className="w-[170px] h-10 rounded-xl bg-card border-border/60">
+                <SelectValue placeholder="Select Month" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableMonths.map((m) => (
+                  <SelectItem key={m.value} value={m.value}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={downloadMonthlyReport} className="rounded-xl gradient-brand shadow-glow">
+              <Download className="mr-2 h-4 w-4" /> Download Report
+            </Button>
+          </div>
+        }
       />
 
       {/* Stat cards */}

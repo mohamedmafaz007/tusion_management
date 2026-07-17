@@ -571,6 +571,38 @@ var FilePlay = createLucideIcon("file-play", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var FileSpreadsheet = createLucideIcon("file-spreadsheet", [
+	["path", {
+		d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+		key: "1oefj6"
+	}],
+	["path", {
+		d: "M14 2v5a1 1 0 0 0 1 1h5",
+		key: "wfsgrz"
+	}],
+	["path", {
+		d: "M8 13h2",
+		key: "yr2amv"
+	}],
+	["path", {
+		d: "M14 13h2",
+		key: "un5t4a"
+	}],
+	["path", {
+		d: "M8 17h2",
+		key: "2yhykz"
+	}],
+	["path", {
+		d: "M14 17h2",
+		key: "10kma7"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var FileText = createLucideIcon("file-text", [
 	["path", {
 		d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
@@ -1321,4 +1353,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { ChevronDown as $, LayoutDashboard as A, Eye as B, Pencil as C, MapPin as D, Menu as E, FolderOpen as F, CircleX as G, Cloud as H, FileType as I, CircleCheckBig as J, CircleQuestionMark as K, FileText as L, GraduationCap as M, Gift as N, LogOut as O, Funnel as P, ChevronLeft as Q, FilePlay as R, Phone as S, MessageSquare as T, Clock as U, Download as V, Circle as W, ChevronUp as X, CircleAlert as Y, ChevronRight as Z, RotateCcw as _, UserPlus as a, CalendarCheck as at, Printer as b, TriangleAlert as c, ArrowUpDown as ct, Sun as d, Check as et, Settings as f, Save as g, School as h, UserX as i, Calendar as it, History as j, LoaderCircle as k, TrendingUp as l, ArrowRight as lt, Search as m, Wallet as n, ChartColumn as nt, UserCheck as o, BookOpen as ot, Send as p, CircleCheck as q, Users as r, Camera as rt, Upload as s, Bell as st, X as t, CheckCheck as tt, Trash2 as u, ArrowLeft as ut, RefreshCw as v, Moon as w, Presentation as x, Receipt as y, FileImage as z };
+export { ChevronLeft as $, LayoutDashboard as A, FileImage as B, Pencil as C, MapPin as D, Menu as E, FolderOpen as F, Circle as G, Download as H, FileType as I, CircleCheck as J, CircleX as K, FileText as L, GraduationCap as M, Gift as N, LogOut as O, Funnel as P, ChevronRight as Q, FileSpreadsheet as R, Phone as S, MessageSquare as T, Cloud as U, Eye as V, Clock as W, CircleAlert as X, CircleCheckBig as Y, ChevronUp as Z, RotateCcw as _, UserPlus as a, Calendar as at, Printer as b, TriangleAlert as c, Bell as ct, Sun as d, ArrowLeft as dt, ChevronDown as et, Settings as f, Save as g, School as h, UserX as i, Camera as it, History as j, LoaderCircle as k, TrendingUp as l, ArrowUpDown as lt, Search as m, Wallet as n, CheckCheck as nt, UserCheck as o, CalendarCheck as ot, Send as p, CircleQuestionMark as q, Users as r, ChartColumn as rt, Upload as s, BookOpen as st, X as t, Check as tt, Trash2 as u, ArrowRight as ut, RefreshCw as v, Moon as w, Presentation as x, Receipt as y, FilePlay as z };

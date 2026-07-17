@@ -3,7 +3,7 @@ import { _ as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { P as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { E as uid, M as useStudents, b as sendWhatsAppAlert, i as Input, j as useSettings, n as Button, o as STANDARDS } from "./hooks-BIRdQpF6.mjs";
-import { _ as RotateCcw, g as Save, k as LoaderCircle, rt as Camera } from "../_libs/lucide-react.mjs";
+import { _ as RotateCcw, g as Save, it as Camera, k as LoaderCircle } from "../_libs/lucide-react.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
 import { n as PageHeader } from "./AppShell-CYiei1zp.mjs";
 import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-v0Zn4H8T.mjs";
