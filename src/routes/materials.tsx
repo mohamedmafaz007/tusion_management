@@ -325,7 +325,7 @@ function MaterialsPage() {
           }
         />
         {/* Loading skeletons for standard folders */}
-        <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 animate-pulse">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 animate-pulse">
           {[1, 2, 3, 4, 5, 6, 7].map((i) => (
             <div key={i} className="glass flex flex-col items-center gap-2 rounded-2xl p-4">
               <div className="h-8 w-8 rounded-full bg-muted/30" />
@@ -351,7 +351,7 @@ function MaterialsPage() {
       />
 
       {/* Standard folders */}
-      <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
         {STANDARDS.map((s) => {
           const active = standard === s;
           return (

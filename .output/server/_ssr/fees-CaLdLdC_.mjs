@@ -5,14 +5,14 @@ import { T as sendWhatsAppReceipt, n as Input, t as Button } from "./db-_-56JTAZ
 import { a as uid, c as useHydrated, d as useStudents, i as STANDARDS, s as useFees, u as useSettings } from "./hooks-P7UI8aLI.mjs";
 import { K as Clock, N as History, Z as CircleCheckBig, b as Receipt, h as Search, j as LoaderCircle, m as Send, n as Wallet, x as Printer } from "../_libs/lucide-react.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { n as PageHeader } from "./AppShell-lF0Fo40s.mjs";
+import { n as PageHeader } from "./AppShell-_OWaNo8O.mjs";
 import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-HRfI_rwd.mjs";
 import { t as StatCard } from "./StatCard-B6Zbhul9.mjs";
 import { n as FeeStatusBadge } from "./StatusBadges-CKHGYuKh.mjs";
 import { a as studentAvatarStyle, n as formatCurrency, r as initials, t as currentMonthKey } from "./derive-B-AOoH3y.mjs";
 import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-CbpQSt_x.mjs";
 import { a as DialogHeader, i as DialogFooter, n as DialogContent, o as DialogTitle, r as DialogDescription, t as Dialog } from "./dialog-DXeksx_D.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/fees-BFcmvaD1.js
+//#region node_modules/.nitro/vite/services/ssr/assets/fees-CaLdLdC_.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function FeesPage() {

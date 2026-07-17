@@ -9,7 +9,7 @@ import { D as Menu, E as MessageSquare, K as Clock, M as LayoutDashboard, P as G
 import { n as AvatarFallback$1, r as AvatarImage$1, t as Avatar$1 } from "../_libs/radix-ui__react-avatar.mjs";
 import { a as Label2, c as Root2, d as SubTrigger2, f as Trigger, i as ItemIndicator2, l as Separator2, n as Content2, o as Portal2, r as Item2, s as RadioItem2, t as CheckboxItem2, u as SubContent2 } from "../_libs/@radix-ui/react-dropdown-menu+[...].mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/AppShell-lF0Fo40s.js
+//#region node_modules/.nitro/vite/services/ssr/assets/AppShell-_OWaNo8O.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Avatar = import_react.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Avatar$1, {
@@ -488,11 +488,11 @@ function AppShell({ children }) {
 }
 function PageHeader({ title, description, actions }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between",
+		className: "mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "min-w-0",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
-				className: "truncate text-2xl font-bold tracking-tight md:text-3xl",
+				className: "text-2xl font-bold tracking-tight md:text-3xl",
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 					className: "gradient-text",
 					children: title
@@ -502,7 +502,7 @@ function PageHeader({ title, description, actions }) {
 				children: description
 			})]
 		}), actions && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-			className: "flex shrink-0 flex-wrap items-center gap-2",
+			className: "flex flex-wrap items-center gap-2",
 			children: actions
 		})]
 	});

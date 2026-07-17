@@ -5,12 +5,12 @@ import { A as syncDbStudents, D as syncDbFees, E as syncDbAttendance, O as syncD
 import { n as DEFAULT_SETTINGS, u as useSettings } from "./hooks-P7UI8aLI.mjs";
 import { T as Moon, Z as CircleCheckBig, _ as Save, d as Sun, j as LoaderCircle, s as Upload, ut as Bell } from "../_libs/lucide-react.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { n as PageHeader } from "./AppShell-lF0Fo40s.mjs";
+import { n as PageHeader } from "./AppShell-_OWaNo8O.mjs";
 import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-HRfI_rwd.mjs";
 import { t as Label } from "./label-B6_btTH_.mjs";
 import { t as Textarea } from "./textarea-BX6VBtBM.mjs";
 import { n as SwitchThumb, t as Switch$1 } from "../_libs/radix-ui__react-switch.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/settings-CwKZiWsZ.js
+//#region node_modules/.nitro/vite/services/ssr/assets/settings-DKffztER.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Switch = import_react.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Switch$1, {

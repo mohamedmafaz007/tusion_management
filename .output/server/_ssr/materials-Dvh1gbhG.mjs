@@ -5,11 +5,11 @@ import { n as Input, s as cn, t as Button } from "./db-_-56JTAZ.mjs";
 import { c as useHydrated, i as STANDARDS, l as useMaterials, r as MATERIAL_TYPES } from "./hooks-P7UI8aLI.mjs";
 import { G as Cloud, H as FileImage, L as FolderOpen, R as FileType, S as Presentation, U as Eye, V as FilePlay, W as Download, h as Search, s as Upload, u as Trash2, z as FileText } from "../_libs/lucide-react.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { n as PageHeader } from "./AppShell-lF0Fo40s.mjs";
+import { n as PageHeader } from "./AppShell-_OWaNo8O.mjs";
 import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-HRfI_rwd.mjs";
 import { t as Label } from "./label-B6_btTH_.mjs";
 import { a as DialogHeader, i as DialogFooter, n as DialogContent, o as DialogTitle, t as Dialog } from "./dialog-DXeksx_D.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/materials-BUM612nd.js
+//#region node_modules/.nitro/vite/services/ssr/assets/materials-Dvh1gbhG.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function extIcon(ext) {
@@ -263,7 +263,7 @@ function MaterialsPage() {
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Upload, { className: "mr-2 h-4 w-4" }), " Upload Material"]
 			})
 		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-			className: "grid gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 animate-pulse",
+			className: "grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 animate-pulse",
 			children: [
 				1,
 				2,
@@ -295,7 +295,7 @@ function MaterialsPage() {
 				})
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "grid gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7",
+				className: "grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7",
 				children: STANDARDS.map((s) => {
 					const active = standard === s;
 					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
