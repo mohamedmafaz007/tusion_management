@@ -1351,3 +1351,13 @@ Vishwa Tuition Center`;
 
     return { success: true, festival: festival.name, sent: sentCount, failed: failedCount };
   });
+
+export const loginAdmin = createServerFn({ method: "POST" })
+  .validator((password: string) => password)
+  .handler(async ({ data: password }) => {
+    const envPassword = process.env.ADMIN_PASSWORD || "vishwa@123";
+    if (password === envPassword) {
+      return { success: true, token: "vishwa_admin_session_token_123" };
+    }
+    return { success: false, error: "Incorrect password" };
+  });

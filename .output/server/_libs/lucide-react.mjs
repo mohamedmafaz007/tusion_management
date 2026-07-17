@@ -797,6 +797,24 @@ var LoaderCircle = createLucideIcon("loader-circle", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Lock = createLucideIcon("lock", [["rect", {
+	width: "18",
+	height: "11",
+	x: "3",
+	y: "11",
+	rx: "2",
+	ry: "2",
+	key: "1w4ew1"
+}], ["path", {
+	d: "M7 11V7a5 5 0 0 1 10 0v4",
+	key: "fwvmzm"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var LogOut = createLucideIcon("log-out", [
 	["path", {
 		d: "m16 17 5-5-5-5",
@@ -1379,4 +1397,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { ChevronRight as $, LoaderCircle as A, FilePlay as B, Phone as C, Menu as D, MessageSquare as E, Funnel as F, Clock as G, Eye as H, FolderOpen as I, CircleQuestionMark as J, Circle as K, FileType as L, History as M, GraduationCap as N, MapPin as O, Gift as P, ChevronUp as Q, FileText as R, Presentation as S, Moon as T, Download as U, FileImage as V, Cloud as W, CircleCheckBig as X, CircleCheck as Y, CircleAlert as Z, Save as _, UserPlus as a, Camera as at, Receipt as b, TriangleAlert as c, BookOpen as ct, Sun as d, ArrowRight as dt, ChevronLeft as et, Sparkles as f, ArrowLeft as ft, School as g, Search as h, UserX as i, ChartColumn as it, LayoutDashboard as j, LogOut as k, TrendingUp as l, Bell as lt, Send as m, Wallet as n, Check as nt, UserCheck as o, Calendar as ot, Settings as p, CircleX as q, Users as r, CheckCheck as rt, Upload as s, CalendarCheck as st, X as t, ChevronDown as tt, Trash2 as u, ArrowUpDown as ut, RotateCcw as v, Pencil as w, Printer as x, RefreshCw as y, FileSpreadsheet as z };
+export { ChevronUp as $, Lock as A, FileSpreadsheet as B, Phone as C, Menu as D, MessageSquare as E, Gift as F, Cloud as G, FileImage as H, Funnel as I, CircleX as J, Clock as K, FolderOpen as L, LayoutDashboard as M, History as N, MapPin as O, GraduationCap as P, CircleAlert as Q, FileType as R, Presentation as S, Moon as T, Eye as U, FilePlay as V, Download as W, CircleCheck as X, CircleQuestionMark as Y, CircleCheckBig as Z, Save as _, UserPlus as a, ChartColumn as at, Receipt as b, TriangleAlert as c, CalendarCheck as ct, Sun as d, ArrowUpDown as dt, ChevronRight as et, Sparkles as f, ArrowRight as ft, School as g, Search as h, UserX as i, CheckCheck as it, LoaderCircle as j, LogOut as k, TrendingUp as l, BookOpen as lt, Send as m, Wallet as n, ChevronDown as nt, UserCheck as o, Camera as ot, Settings as p, ArrowLeft as pt, Circle as q, Users as r, Check as rt, Upload as s, Calendar as st, X as t, ChevronLeft as tt, Trash2 as u, Bell as ut, RotateCcw as v, Pencil as w, Printer as x, RefreshCw as y, FileText as z };

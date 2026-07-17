@@ -138,10 +138,31 @@ export function AppShell({ children }: { children: ReactNode }) {
     else root.classList.remove("dark");
   }, [settings.theme]);
 
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // Authentication check
+  useEffect(() => {
+    if (!hydrated) return;
+    const token = localStorage.getItem("tms.auth_token");
+    if (!token) {
+      if (pathname !== "/login") {
+        window.location.href = "/login";
+      }
+    } else {
+      if (pathname === "/login") {
+        window.location.href = "/";
+      }
+    }
+  }, [hydrated, pathname]);
+
   const toggleTheme = () => {
     setSettingsState({ ...settings, theme: settings.theme === "dark" ? "light" : "dark" });
     toast.success(`Switched to ${settings.theme === "dark" ? "light" : "dark"} mode`);
   };
+
+  if (pathname === "/login") {
+    return <main className="animate-in fade-in duration-300">{children}</main>;
+  }
 
   return (
     <div className="flex min-h-screen w-full">
@@ -246,7 +267,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                       <Settings className="mr-2 h-4 w-4" /> Settings
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toast.success("Signed out (demo)")}>
+                  <DropdownMenuItem onClick={() => {
+                    localStorage.removeItem("tms.auth_token");
+                    toast.success("Successfully logged out");
+                    window.location.href = "/login";
+                  }}>
                     <LogOut className="mr-2 h-4 w-4" /> Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>

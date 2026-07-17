@@ -14,6 +14,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MaterialsRouteImport } from './routes/materials'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as FeesRouteImport } from './routes/fees'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as IndexRouteImport } from './routes/index'
@@ -45,6 +46,11 @@ const MessagesRoute = MessagesRouteImport.update({
 const MaterialsRoute = MaterialsRouteImport.update({
   id: '/materials',
   path: '/materials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeesRoute = FeesRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/attendance': typeof AttendanceRoute
   '/fees': typeof FeesRoute
+  '/login': typeof LoginRoute
   '/materials': typeof MaterialsRoute
   '/messages': typeof MessagesRoute
   '/reports': typeof ReportsRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/attendance': typeof AttendanceRoute
   '/fees': typeof FeesRoute
+  '/login': typeof LoginRoute
   '/materials': typeof MaterialsRoute
   '/messages': typeof MessagesRoute
   '/reports': typeof ReportsRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/attendance': typeof AttendanceRoute
   '/fees': typeof FeesRoute
+  '/login': typeof LoginRoute
   '/materials': typeof MaterialsRoute
   '/messages': typeof MessagesRoute
   '/reports': typeof ReportsRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/'
     | '/attendance'
     | '/fees'
+    | '/login'
     | '/materials'
     | '/messages'
     | '/reports'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/'
     | '/attendance'
     | '/fees'
+    | '/login'
     | '/materials'
     | '/messages'
     | '/reports'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/'
     | '/attendance'
     | '/fees'
+    | '/login'
     | '/materials'
     | '/messages'
     | '/reports'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AttendanceRoute: typeof AttendanceRoute
   FeesRoute: typeof FeesRoute
+  LoginRoute: typeof LoginRoute
   MaterialsRoute: typeof MaterialsRoute
   MessagesRoute: typeof MessagesRoute
   ReportsRoute: typeof ReportsRoute
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/materials'
       fullPath: '/materials'
       preLoaderRoute: typeof MaterialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fees': {
@@ -279,6 +299,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AttendanceRoute: AttendanceRoute,
   FeesRoute: FeesRoute,
+  LoginRoute: LoginRoute,
   MaterialsRoute: MaterialsRoute,
   MessagesRoute: MessagesRoute,
   ReportsRoute: ReportsRoute,
