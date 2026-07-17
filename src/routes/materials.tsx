@@ -387,27 +387,7 @@ function MaterialsPage() {
         </Select>
       </div>
 
-      {isLoadingList ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="glass animate-pulse flex flex-col gap-3 rounded-2xl p-4">
-              <div className="flex items-start justify-between">
-                <div className="h-11 w-11 rounded-xl bg-muted/30" />
-                <div className="h-4 w-16 rounded bg-muted/30" />
-              </div>
-              <div className="space-y-2 mt-2">
-                <div className="h-4 w-3/4 rounded bg-muted/30" />
-                <div className="h-3 w-1/2 rounded bg-muted/30" />
-              </div>
-              <div className="mt-auto flex gap-1 pt-4">
-                <div className="h-8 flex-1 rounded-lg bg-muted/30" />
-                <div className="h-8 flex-1 rounded-lg bg-muted/30" />
-                <div className="h-8 w-8 rounded-lg bg-muted/30" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : filtered.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="glass rounded-2xl p-10 text-center text-muted-foreground">
           <FolderOpen className="mx-auto mb-3 h-10 w-10 opacity-50" />
           <p>No materials in {standard} standard yet.</p>
