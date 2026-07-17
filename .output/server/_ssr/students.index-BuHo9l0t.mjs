@@ -6,12 +6,12 @@ import { n as Input, s as cn, t as Button } from "./db-_-56JTAZ.mjs";
 import { c as useHydrated, d as useStudents, i as STANDARDS, o as useAttendance, s as useFees, t as Badge } from "./hooks-P7UI8aLI.mjs";
 import { I as Funnel, U as Eye, W as Download, a as UserPlus, dt as ArrowUpDown, et as ChevronRight, h as Search, tt as ChevronLeft, u as Trash2, w as Pencil } from "../_libs/lucide-react.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { n as PageHeader } from "./AppShell-BP_3GgOB.mjs";
+import { n as PageHeader } from "./AppShell-cq62pVOu.mjs";
 import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-HRfI_rwd.mjs";
 import { a as studentAvatarStyle, i as studentAttendancePct, n as formatCurrency, o as studentFeeStatus, r as initials } from "./derive-B-AOoH3y.mjs";
 import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-CbpQSt_x.mjs";
 import { a as AlertDialogDescription, c as AlertDialogTitle, i as AlertDialogContent, n as AlertDialogAction, o as AlertDialogFooter, r as AlertDialogCancel, s as AlertDialogHeader, t as AlertDialog } from "./alert-dialog-CW9m-fN-.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/students.index-DHACvC53.js
+//#region node_modules/.nitro/vite/services/ssr/assets/students.index-BuHo9l0t.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var PAGE_SIZE = 8;

@@ -9,7 +9,7 @@ import { D as Menu, E as MessageSquare, K as Clock, M as LayoutDashboard, P as G
 import { n as AvatarFallback$1, r as AvatarImage$1, t as Avatar$1 } from "../_libs/radix-ui__react-avatar.mjs";
 import { a as Label2, c as Root2, d as SubTrigger2, f as Trigger, i as ItemIndicator2, l as Separator2, n as Content2, o as Portal2, r as Item2, s as RadioItem2, t as CheckboxItem2, u as SubContent2 } from "../_libs/@radix-ui/react-dropdown-menu+[...].mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/AppShell-BP_3GgOB.js
+//#region node_modules/.nitro/vite/services/ssr/assets/AppShell-cq62pVOu.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Avatar = import_react.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Avatar$1, {
@@ -490,7 +490,7 @@ function AppShell({ children }) {
 								target: "_blank",
 								rel: "noopener noreferrer",
 								className: "font-semibold text-primary hover:underline",
-								children: "innoaivators.com"
+								children: "innoaivators"
 							})
 						]
 					})]

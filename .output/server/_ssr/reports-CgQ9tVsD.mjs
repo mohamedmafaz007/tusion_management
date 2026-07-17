@@ -5,13 +5,13 @@ import { s as cn, t as Button } from "./db-_-56JTAZ.mjs";
 import { c as useHydrated, d as useStudents, i as STANDARDS, o as useAttendance, s as useFees, t as Badge } from "./hooks-P7UI8aLI.mjs";
 import { B as FileSpreadsheet, J as CircleX, W as Download, at as ChartColumn, it as CheckCheck, l as TrendingUp, r as Users } from "../_libs/lucide-react.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { n as PageHeader } from "./AppShell-BP_3GgOB.mjs";
+import { n as PageHeader } from "./AppShell-cq62pVOu.mjs";
 import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-HRfI_rwd.mjs";
 import { t as StatCard } from "./StatCard-B6Zbhul9.mjs";
 import { i as studentAttendancePct } from "./derive-B-AOoH3y.mjs";
 import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-CbpQSt_x.mjs";
 import { a as XAxis, c as Bar, d as ResponsiveContainer, f as Tooltip, i as YAxis, l as Pie, n as BarChart, o as Line, p as Legend, r as LineChart, s as CartesianGrid, t as PieChart, u as Cell } from "../_libs/recharts+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/reports-Bax3VcpO.js
+//#region node_modules/.nitro/vite/services/ssr/assets/reports-CgQ9tVsD.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var MONTH_NAMES = [

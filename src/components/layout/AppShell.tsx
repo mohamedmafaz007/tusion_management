@@ -295,7 +295,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               rel="noopener noreferrer"
               className="font-semibold text-primary hover:underline"
             >
-              innoaivators.com
+              innoaivators
             </a>
           </div>
         </footer>
