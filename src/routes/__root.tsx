@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -13,6 +14,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/layout/AppShell";
 import { Toaster } from "@/components/ui/sonner";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 function NotFoundComponent() {
   return (
@@ -125,12 +128,45 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const isLoading = useRouterState({ select: (s) => s.status === "pending" });
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppShell>
-        <Outlet />
-      </AppShell>
+      {isLoading && (
+        <>
+          {/* Glowing Top Progress Bar */}
+          <div className="fixed inset-x-0 top-0 z-50 h-[3px] bg-secondary/30 overflow-hidden">
+            <div 
+              className="h-full bg-primary gradient-brand shadow-[0_0_8px_rgba(99,102,241,0.8)]"
+              style={{
+                width: "100%",
+                animation: "loading-bar 2s infinite ease-in-out",
+              }}
+            />
+            <style>{`
+              @keyframes loading-bar {
+                0% { transform: translateX(-100%); }
+                50% { transform: translateX(-30%); }
+                100% { transform: translateX(100%); }
+              }
+            `}</style>
+          </div>
+
+          {/* Centered Glassmorphic Loading Indicator */}
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/10 backdrop-blur-[1px] animate-in fade-in duration-200">
+            <div className="glass flex items-center gap-3 rounded-2xl border border-border/60 px-5 py-3 shadow-glow animate-pulse">
+              <Loader2 className="h-5 w-5 text-primary animate-spin" />
+              <span className="text-xs font-semibold text-foreground">Fetching database records...</span>
+            </div>
+          </div>
+        </>
+      )}
+
+      <div className={cn("transition-all duration-300", isLoading && "opacity-60 pointer-events-none")}>
+        <AppShell>
+          <Outlet />
+        </AppShell>
+      </div>
       <Toaster position="top-right" richColors />
     </QueryClientProvider>
   );

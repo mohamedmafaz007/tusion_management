@@ -1,18 +1,19 @@
 import { o as __toESM } from "../_runtime.mjs";
-import { c as HeadContent, d as createRouter, f as Outlet, g as Link, h as createRootRouteWithContext, m as createFileRoute, p as lazyRouteComponent, s as Scripts, v as useRouter } from "../_libs/@tanstack/react-router+[...].mjs";
+import { c as HeadContent, d as createRouter, f as Outlet, g as Link, h as createRootRouteWithContext, l as useRouterState, m as createFileRoute, p as lazyRouteComponent, s as Scripts, v as useRouter } from "../_libs/@tanstack/react-router+[...].mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { P as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { C as sendMonthlyFeeReminders, a as checkAndSendFestivalGreetings, i as checkAndSendBirthdayWishes } from "./db-_-56JTAZ.mjs";
+import { C as sendMonthlyFeeReminders, a as checkAndSendFestivalGreetings, i as checkAndSendBirthdayWishes, s as cn } from "./db-_-56JTAZ.mjs";
+import { j as LoaderCircle } from "../_libs/lucide-react.mjs";
 import { t as Toaster } from "../_libs/sonner.mjs";
 import { t as AppShell } from "./AppShell-lF0Fo40s.mjs";
 import { t as Route$13 } from "./students._id-Dp31vsLY.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { t as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
 import { i as stringType, n as enumType, r as objectType, t as coerce } from "../_libs/zod.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-T9DWv2Km.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-Bgrb4rwu.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-DCwmuZSf.css";
+var styles_default = "/assets/styles-pLm-RNGW.css";
 function reportLovableError(error, context = {}) {
 	if (typeof window === "undefined") return;
 	window.__lovableEvents?.captureException?.(error, {
@@ -171,12 +172,44 @@ function RootShell({ children }) {
 }
 function RootComponent() {
 	const { queryClient } = Route$12.useRouteContext();
+	const isLoading = useRouterState({ select: (s) => s.status === "pending" });
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(QueryClientProvider, {
 		client: queryClient,
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AppShell, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Outlet, {}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Toaster$1, {
-			position: "top-right",
-			richColors: true
-		})]
+		children: [
+			isLoading && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "fixed inset-x-0 top-0 z-50 h-[3px] bg-secondary/30 overflow-hidden",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "h-full bg-primary gradient-brand shadow-[0_0_8px_rgba(99,102,241,0.8)]",
+					style: {
+						width: "100%",
+						animation: "loading-bar 2s infinite ease-in-out"
+					}
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+              @keyframes loading-bar {
+                0% { transform: translateX(-100%); }
+                50% { transform: translateX(-30%); }
+                100% { transform: translateX(100%); }
+              }
+            ` })]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/10 backdrop-blur-[1px] animate-in fade-in duration-200",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "glass flex items-center gap-3 rounded-2xl border border-border/60 px-5 py-3 shadow-glow animate-pulse",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "h-5 w-5 text-primary animate-spin" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "text-xs font-semibold text-foreground",
+						children: "Fetching database records..."
+					})]
+				})
+			})] }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: cn("transition-all duration-300", isLoading && "opacity-60 pointer-events-none"),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AppShell, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Outlet, {}) })
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Toaster$1, {
+				position: "top-right",
+				richColors: true
+			})
+		]
 	});
 }
 var BASE_URL = "";
