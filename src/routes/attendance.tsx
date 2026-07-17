@@ -125,8 +125,8 @@ function AttendancePage() {
       .replace("[date]", formattedDate)
       .replace("[time]", formattedTime);
 
-    const parentMobile = s.fatherMobile || s.motherMobile;
-    if (!parentMobile) {
+    const parentPhones = [s.fatherMobile, s.motherMobile].filter(Boolean);
+    if (parentPhones.length === 0) {
       toast.error("No registered parent mobile number found for this student.");
       return;
     }
@@ -134,26 +134,39 @@ function AttendancePage() {
     const provider = settings.whatsappProvider || "manual";
 
     if (provider === "manual") {
-      let phone = parentMobile.replace(/[\s\-\(\)\+]/g, "");
-      if (phone.length === 10) phone = "91" + phone;
-      const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
-      window.open(url, "_blank");
-      toast.success("Opening WhatsApp chat link...");
+      parentPhones.forEach((phoneNum, idx) => {
+        let phone = phoneNum.replace(/[\s\-\(\)\+]/g, "");
+        if (phone.length === 10) phone = "91" + phone;
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
+        if (idx === 0) {
+          window.open(url, "_blank");
+        } else {
+          setTimeout(() => {
+            window.open(url, "_blank");
+          }, 500);
+        }
+      });
+      toast.success("Opening WhatsApp chat link(s)...");
     } else {
-      const loadingToast = toast.loading(`Sending automated WhatsApp alert to ${s.name}'s parent...`);
+      const loadingToast = toast.loading(`Sending automated WhatsApp alert to ${s.name}'s parent${parentPhones.length > 1 ? "s" : ""}...`);
       try {
-        const res = await sendWhatsAppAlert({
-          data: {
-            recipientPhone: parentMobile,
-            studentName: s.name,
-            status: status,
-            date: dateKey // Pass the date of attendance to the server
-          }
-        });
-        if (res.success) {
+        const results = await Promise.all(
+          parentPhones.map((phone) =>
+            sendWhatsAppAlert({
+              data: {
+                recipientPhone: phone,
+                studentName: s.name,
+                status: status,
+                date: dateKey // Pass the date of attendance to the server
+              }
+            })
+          )
+        );
+        const allSuccess = results.every((res) => res.success);
+        if (allSuccess) {
           toast.success(`WhatsApp alert sent successfully!`, { id: loadingToast });
         } else {
-          toast.error("Failed to send WhatsApp alert.", { id: loadingToast });
+          toast.error("Failed to send WhatsApp alert to at least one parent.", { id: loadingToast });
         }
       } catch (err: any) {
         toast.error(`Error: ${err.message || err}`, { id: loadingToast });

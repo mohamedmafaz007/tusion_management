@@ -77,7 +77,39 @@ function StudentProfilePage() {
 
   const save = () => {
     if (!draft) return;
-    setStudentsState(students.map((s) => (s.id === id ? draft : s)));
+
+    if (!draft.name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+
+    const fatherClean = draft.fatherMobile?.trim() || "";
+    const motherClean = draft.motherMobile?.trim() || "";
+
+    if (!fatherClean && !motherClean) {
+      toast.error("At least one parent mobile number is required");
+      return;
+    }
+
+    const phoneRegex = /^\d{10}$/;
+    if (fatherClean && !phoneRegex.test(fatherClean)) {
+      toast.error("Father mobile must be 10 digits");
+      return;
+    }
+
+    if (motherClean && !phoneRegex.test(motherClean)) {
+      toast.error("Mother mobile must be 10 digits");
+      return;
+    }
+
+    const updatedStudent = {
+      ...draft,
+      fatherMobile: fatherClean,
+      motherMobile: motherClean,
+      address: draft.address?.trim() || "",
+    };
+
+    setStudentsState(students.map((s) => (s.id === id ? updatedStudent : s)));
 
     // Update pending fees
     const newPending = Math.max(0, draftPending);

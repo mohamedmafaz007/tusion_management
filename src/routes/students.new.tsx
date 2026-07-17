@@ -30,13 +30,16 @@ const schema = z.object({
   standard: z.enum(["6th", "7th", "8th", "9th", "10th", "11th", "12th"]),
   section: z.string().trim().min(1, "Section is required").max(5),
   parentName: z.string().trim().min(2, "Parent name is required").max(100),
-  fatherMobile: z.string().regex(/^\d{10}$/, "Must be 10 digits"),
-  motherMobile: z.string().regex(/^\d{10}$/, "Must be 10 digits"),
-  address: z.string().trim().min(5).max(300),
+  fatherMobile: z.string().regex(/^\d{10}$/, "Must be 10 digits").or(z.literal("")),
+  motherMobile: z.string().regex(/^\d{10}$/, "Must be 10 digits").or(z.literal("")),
+  address: z.string().trim().max(300).optional().or(z.literal("")),
   joiningDate: z.string().min(1, "Joining date is required"),
   monthlyFees: z.coerce.number().min(0).max(1000000),
   admissionFees: z.coerce.number().min(0).max(1000000),
   notes: z.string().max(500).optional(),
+}).refine((data) => data.fatherMobile || data.motherMobile, {
+  message: "At least one parent mobile number is required",
+  path: ["fatherMobile"],
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -105,31 +108,43 @@ function NewStudentPage() {
       toast.success(`${data.name} registered successfully!`);
 
       // Send Welcome WhatsApp alert
-      const parentMobile = data.fatherMobile || data.motherMobile;
-      if (parentMobile) {
+      const parentPhones = [data.fatherMobile, data.motherMobile].filter(Boolean);
+      if (parentPhones.length > 0) {
         const provider = settings.whatsappProvider || "manual";
         const template = settings.whatsappTemplateWelcome || 
           "Dear Parent, thank you for registering [student_name] at Vishwa Tuition Center. We are excited to guide them on their academic journey. Regards, Prof. Anita Sharma.";
         const messageText = template.replace("[student_name]", data.name);
 
         if (provider === "manual") {
-          let phone = parentMobile.replace(/[\s\-\(\)\+]/g, "");
-          if (phone.length === 10) phone = "91" + phone;
-          const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
-          window.open(url, "_blank");
-          toast.success("Opening WhatsApp welcome message link...");
+          parentPhones.forEach((phoneNum, idx) => {
+            let phone = phoneNum.replace(/[\s\-\(\)\+]/g, "");
+            if (phone.length === 10) phone = "91" + phone;
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
+            if (idx === 0) {
+              window.open(url, "_blank");
+            } else {
+              setTimeout(() => {
+                window.open(url, "_blank");
+              }, 500);
+            }
+          });
+          toast.success("Opening WhatsApp welcome message link(s)...");
         } else {
           // Wrap in a loader toast so the user knows it's sending automated message
           const loadingAlert = toast.loading("Sending automated welcome WhatsApp message...");
           try {
-            await sendWhatsAppAlert({
-              data: {
-                recipientPhone: parentMobile,
-                studentName: data.name,
-                status: "Welcome",
-                studentId
-              }
-            });
+            await Promise.all(
+              parentPhones.map((phone) =>
+                sendWhatsAppAlert({
+                  data: {
+                    recipientPhone: phone,
+                    studentName: data.name,
+                    status: "Welcome",
+                    studentId
+                  }
+                })
+              )
+            );
             toast.success("Automated welcome alert sent successfully!", { id: loadingAlert });
           } catch (e: any) {
             console.error("Failed to send welcome alert:", e);

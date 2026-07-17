@@ -715,8 +715,8 @@ export const sendWhatsAppReceipt = createServerFn({ method: "POST" })
     if (feeRows.length === 0) throw new Error("Fee record not found");
     const f = feeRows[0];
 
-    const parentMobile = s.fatherMobile || s.motherMobile;
-    if (!parentMobile) throw new Error("No parent mobile number registered");
+    const parentPhones = [s.fatherMobile, s.motherMobile].filter(Boolean);
+    if (parentPhones.length === 0) throw new Error("No parent mobile number registered");
 
     const pdfBuffer = await ws.generateReceiptPdf({
       instituteName: settings.instituteName || "Vishwa Tuition Center",
@@ -740,24 +740,47 @@ export const sendWhatsAppReceipt = createServerFn({ method: "POST" })
       `Receipt ID: ${f.id.slice(0, 8).toUpperCase()}\n\n` +
       `Thank you,\n${settings.instituteName || "Vishwa Tuition Center"}`;
 
-    // Send the payment summary text first
-    await ws.sendWhatsAppTextMessage(parentMobile, textMessage);
+    let sentCount = 0;
+    let lastError: any = null;
+    for (const phone of parentPhones) {
+      try {
+        // Send the payment summary text first
+        await ws.sendWhatsAppTextMessage(phone, textMessage);
 
-    // Send the payment receipt PDF second
-    await ws.sendWhatsAppMessageWithPDF(
-      parentMobile,
-      "Fee Payment Receipt PDF",
-      pdfBuffer,
-      `Receipt_${f.id.slice(0, 8).toUpperCase()}.pdf`
-    );
-    await logMessage({
-      type: "fee_receipt",
-      studentId: s.id,
-      studentName: s.name,
-      recipientPhone: parentMobile,
-      message: textMessage + " [+ Fee Receipt PDF]",
-      status: "sent"
-    });
+        // Send the payment receipt PDF second
+        await ws.sendWhatsAppMessageWithPDF(
+          phone,
+          "Fee Payment Receipt PDF",
+          pdfBuffer,
+          `Receipt_${f.id.slice(0, 8).toUpperCase()}.pdf`
+        );
+        await logMessage({
+          type: "fee_receipt",
+          studentId: s.id,
+          studentName: s.name,
+          recipientPhone: phone,
+          message: textMessage + " [+ Fee Receipt PDF]",
+          status: "sent"
+        });
+        sentCount++;
+      } catch (err: any) {
+        console.error(`Failed to send receipt to ${phone}:`, err);
+        lastError = err;
+        await logMessage({
+          type: "fee_receipt",
+          studentId: s.id,
+          studentName: s.name,
+          recipientPhone: phone,
+          message: textMessage + " [+ Fee Receipt PDF]",
+          status: "failed",
+          error: err.message || String(err)
+        });
+      }
+    }
+
+    if (sentCount === 0 && lastError) {
+      throw lastError;
+    }
 
     return { success: true };
   });
@@ -935,8 +958,8 @@ export const sendBulkAttendanceAlerts = createServerFn({ method: "POST" })
     const dateStr = `${parseInt(parts[2], 10)} ${MONTHS[parseInt(parts[1], 10) - 1]} ${parts[0]}`;
 
     for (const rec of attendanceRecords) {
-      const parentMobile = rec.fatherMobile || rec.motherMobile;
-      if (!parentMobile) continue;
+      const parentPhones = [rec.fatherMobile, rec.motherMobile].filter(Boolean);
+      if (parentPhones.length === 0) continue;
 
       let template = "";
       if (rec.status === "Present") {
@@ -954,34 +977,36 @@ export const sendBulkAttendanceAlerts = createServerFn({ method: "POST" })
         .replace("[date]", dateStr)
         .replace("[time]", timeStr);
 
-      try {
-        if (provider === "baileys") {
-          await ws.sendWhatsAppTextMessage(parentMobile, messageText);
+      for (const phone of parentPhones) {
+        try {
+          if (provider === "baileys") {
+            await ws.sendWhatsAppTextMessage(phone, messageText);
+          }
+          await logMessage({
+            type: "attendance",
+            studentId: rec.sid,
+            studentName: rec.name,
+            recipientPhone: phone,
+            message: messageText,
+            status: "sent",
+          });
+          sentCount++;
+        } catch (err: any) {
+          await logMessage({
+            type: "attendance",
+            studentId: rec.sid,
+            studentName: rec.name,
+            recipientPhone: phone,
+            message: messageText,
+            status: "failed",
+            error: err.message || String(err),
+          });
+          failedCount++;
         }
-        await logMessage({
-          type: "attendance",
-          studentId: rec.sid,
-          studentName: rec.name,
-          recipientPhone: parentMobile,
-          message: messageText,
-          status: "sent",
-        });
-        sentCount++;
-      } catch (err: any) {
-        await logMessage({
-          type: "attendance",
-          studentId: rec.sid,
-          studentName: rec.name,
-          recipientPhone: parentMobile,
-          message: messageText,
-          status: "failed",
-          error: err.message || String(err),
-        });
-        failedCount++;
-      }
 
-      // Small delay between messages to avoid rate limiting
-      await new Promise((r) => setTimeout(r, 1500));
+        // Small delay between messages to avoid rate limiting
+        await new Promise((r) => setTimeout(r, 1500));
+      }
     }
 
     return { success: true, sent: sentCount, failed: failedCount };
@@ -1022,8 +1047,8 @@ export const sendMonthlyFeeReminders = createServerFn({ method: "POST" })
     const monthLabel = new Date(data.month + "-01").toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 
     for (const s of unpaidStudents) {
-      const parentMobile = s.fatherMobile || s.motherMobile;
-      if (!parentMobile) continue;
+      const parentPhones = [s.fatherMobile, s.motherMobile].filter(Boolean);
+      if (parentPhones.length === 0) continue;
 
       const messageText = template
         .replace("[student_name]", s.name)
@@ -1031,33 +1056,35 @@ export const sendMonthlyFeeReminders = createServerFn({ method: "POST" })
         .replace("[standard]", s.standard)
         .replace("[month]", monthLabel);
 
-      try {
-        if (provider === "baileys") {
-          await ws.sendWhatsAppTextMessage(parentMobile, messageText);
+      for (const phone of parentPhones) {
+        try {
+          if (provider === "baileys") {
+            await ws.sendWhatsAppTextMessage(phone, messageText);
+          }
+          await logMessage({
+            type: "fee_reminder",
+            studentId: s.id,
+            studentName: s.name,
+            recipientPhone: phone,
+            message: messageText,
+            status: "sent",
+          });
+          sentCount++;
+        } catch (err: any) {
+          await logMessage({
+            type: "fee_reminder",
+            studentId: s.id,
+            studentName: s.name,
+            recipientPhone: phone,
+            message: messageText,
+            status: "failed",
+            error: err.message || String(err),
+          });
+          failedCount++;
         }
-        await logMessage({
-          type: "fee_reminder",
-          studentId: s.id,
-          studentName: s.name,
-          recipientPhone: parentMobile,
-          message: messageText,
-          status: "sent",
-        });
-        sentCount++;
-      } catch (err: any) {
-        await logMessage({
-          type: "fee_reminder",
-          studentId: s.id,
-          studentName: s.name,
-          recipientPhone: parentMobile,
-          message: messageText,
-          status: "failed",
-          error: err.message || String(err),
-        });
-        failedCount++;
-      }
 
-      await new Promise((r) => setTimeout(r, 1500));
+        await new Promise((r) => setTimeout(r, 1500));
+      }
     }
 
     return { success: true, sent: sentCount, failed: failedCount, total: unpaidStudents.length };
@@ -1110,41 +1137,43 @@ export const sendFeeOverdueReminders = createServerFn({ method: "POST" })
     ];
 
     for (const s of allOverdue) {
-      const parentMobile = s.fatherMobile || s.motherMobile;
-      if (!parentMobile) continue;
+      const parentPhones = [s.fatherMobile, s.motherMobile].filter(Boolean);
+      if (parentPhones.length === 0) continue;
 
       const messageText = template
         .replace("[student_name]", s.name)
         .replace("[amount]", String(s.monthlyFees))
         .replace("[month]", monthLabel);
 
-      try {
-        if (provider === "baileys") {
-          await ws.sendWhatsAppTextMessage(parentMobile, messageText);
+      for (const phone of parentPhones) {
+        try {
+          if (provider === "baileys") {
+            await ws.sendWhatsAppTextMessage(phone, messageText);
+          }
+          await logMessage({
+            type: "fee_overdue",
+            studentId: s.id,
+            studentName: s.name,
+            recipientPhone: phone,
+            message: messageText,
+            status: "sent",
+          });
+          sentCount++;
+        } catch (err: any) {
+          await logMessage({
+            type: "fee_overdue",
+            studentId: s.id,
+            studentName: s.name,
+            recipientPhone: phone,
+            message: messageText,
+            status: "failed",
+            error: err.message || String(err),
+          });
+          failedCount++;
         }
-        await logMessage({
-          type: "fee_overdue",
-          studentId: s.id,
-          studentName: s.name,
-          recipientPhone: parentMobile,
-          message: messageText,
-          status: "sent",
-        });
-        sentCount++;
-      } catch (err: any) {
-        await logMessage({
-          type: "fee_overdue",
-          studentId: s.id,
-          studentName: s.name,
-          recipientPhone: parentMobile,
-          message: messageText,
-          status: "failed",
-          error: err.message || String(err),
-        });
-        failedCount++;
-      }
 
-      await new Promise((r) => setTimeout(r, 1500));
+        await new Promise((r) => setTimeout(r, 1500));
+      }
     }
 
     return { success: true, sent: sentCount, failed: failedCount };
@@ -1187,38 +1216,40 @@ export const checkAndSendBirthdayWishes = createServerFn({ method: "POST" })
       "Dear Parent, Vishwa Tuition Center wishes [student_name] a very Happy Birthday! 🎉🎂 May this year bring them great success. Regards, Vishwa Tuition Center.";
 
     for (const s of birthdayStudents) {
-      const parentMobile = s.fatherMobile || s.motherMobile;
-      if (!parentMobile) continue;
+      const parentPhones = [s.fatherMobile, s.motherMobile].filter(Boolean);
+      if (parentPhones.length === 0) continue;
 
       const messageText = template.replace("[student_name]", s.name);
 
-      try {
-        if (provider === "baileys") {
-          await ws.sendWhatsAppTextMessage(parentMobile, messageText);
+      for (const phone of parentPhones) {
+        try {
+          if (provider === "baileys") {
+            await ws.sendWhatsAppTextMessage(phone, messageText);
+          }
+          await logMessage({
+            type: "birthday",
+            studentId: s.id,
+            studentName: s.name,
+            recipientPhone: phone,
+            message: messageText,
+            status: "sent",
+          });
+          sentCount++;
+        } catch (err: any) {
+          await logMessage({
+            type: "birthday",
+            studentId: s.id,
+            studentName: s.name,
+            recipientPhone: phone,
+            message: messageText,
+            status: "failed",
+            error: err.message || String(err),
+          });
+          failedCount++;
         }
-        await logMessage({
-          type: "birthday",
-          studentId: s.id,
-          studentName: s.name,
-          recipientPhone: parentMobile,
-          message: messageText,
-          status: "sent",
-        });
-        sentCount++;
-      } catch (err: any) {
-        await logMessage({
-          type: "birthday",
-          studentId: s.id,
-          studentName: s.name,
-          recipientPhone: parentMobile,
-          message: messageText,
-          status: "failed",
-          error: err.message || String(err),
-        });
-        failedCount++;
-      }
 
-      await new Promise((r) => setTimeout(r, 1500));
+        await new Promise((r) => setTimeout(r, 1500));
+      }
     }
 
     return { success: true, sent: sentCount, failed: failedCount, birthdaysFound: birthdayStudents.length };
@@ -1310,8 +1341,8 @@ export const checkAndSendFestivalGreetings = createServerFn({ method: "POST" })
     let failedCount = 0;
 
     for (const s of students) {
-      const parentMobile = s.fatherMobile || s.motherMobile;
-      if (!parentMobile) continue;
+      const parentPhones = [s.fatherMobile, s.motherMobile].filter(Boolean);
+      if (parentPhones.length === 0) continue;
 
       const messageText = `Dear Parent, Vishwa Tuition Center wishes you and your family a very ${festival.name}.
 
@@ -1320,33 +1351,35 @@ ${festival.wish}
 Regards,
 Vishwa Tuition Center`;
 
-      try {
-        if (provider === "baileys") {
-          await ws.sendWhatsAppTextMessage(parentMobile, messageText);
+      for (const phone of parentPhones) {
+        try {
+          if (provider === "baileys") {
+            await ws.sendWhatsAppTextMessage(phone, messageText);
+          }
+          await logMessage({
+            type: "campaign",
+            studentId: s.id,
+            studentName: s.name,
+            recipientPhone: phone,
+            message: messageText,
+            status: "sent",
+          });
+          sentCount++;
+        } catch (err: any) {
+          await logMessage({
+            type: "campaign",
+            studentId: s.id,
+            studentName: s.name,
+            recipientPhone: phone,
+            message: messageText,
+            status: "failed",
+            error: err.message || String(err),
+          });
+          failedCount++;
         }
-        await logMessage({
-          type: "campaign",
-          studentId: s.id,
-          studentName: s.name,
-          recipientPhone: parentMobile,
-          message: messageText,
-          status: "sent",
-        });
-        sentCount++;
-      } catch (err: any) {
-        await logMessage({
-          type: "campaign",
-          studentId: s.id,
-          studentName: s.name,
-          recipientPhone: parentMobile,
-          message: messageText,
-          status: "failed",
-          error: err.message || String(err),
-        });
-        failedCount++;
-      }
 
-      await new Promise((r) => setTimeout(r, 1500));
+        await new Promise((r) => setTimeout(r, 1500));
+      }
     }
 
     return { success: true, festival: festival.name, sent: sentCount, failed: failedCount };
