@@ -233,7 +233,6 @@ function StudentsPage() {
                 <TableHead>Parent</TableHead>
                 <TableHead>Mobile</TableHead>
                 <TableHead>Monthly</TableHead>
-                <TableHead>Fees</TableHead>
                 <TableHead>Attn %</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -241,12 +240,12 @@ function StudentsPage() {
             <TableBody>
               {!hydrated && (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-12 text-center text-muted-foreground">Loading…</TableCell>
+                  <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">Loading…</TableCell>
                 </TableRow>
               )}
               {hydrated && paged.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-12 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
                     No students match your filters.
                   </TableCell>
                 </TableRow>
@@ -275,7 +274,6 @@ function StudentsPage() {
                     <TableCell className="max-w-[160px] truncate">{s.parentName}</TableCell>
                     <TableCell className="font-mono text-xs">{s.fatherMobile}</TableCell>
                     <TableCell>{formatCurrency(s.monthlyFees)}</TableCell>
-                    <TableCell><FeeStatusBadge status={fs.hasPending ? "Pending" : "Paid"} /></TableCell>
                     <TableCell>
                       <span className={cn("font-semibold", attn >= 75 ? "text-emerald-600" : attn >= 50 ? "text-amber-600" : "text-destructive")}>
                         {attn}%

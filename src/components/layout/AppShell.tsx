@@ -16,6 +16,7 @@ import {
   Moon,
   LogOut,
   MessageSquare,
+  Clock,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -69,7 +70,11 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
       <nav className="flex-1 space-y-1">
         {nav.map((item) => {
-          const active = item.exact ? pathname === item.to : pathname === item.to || pathname.startsWith(item.to + "/");
+          const active = item.exact
+            ? pathname === item.to
+            : item.to === "/students"
+            ? (pathname === "/students" || (pathname.startsWith("/students/") && !pathname.startsWith("/students/new")))
+            : (pathname === item.to || pathname.startsWith(item.to + "/"));
           const Icon = item.icon;
           return (
             <Link
@@ -102,6 +107,29 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [settings, setSettingsState] = useSettings();
   const [open, setOpen] = useState(false);
   const hydrated = useHydrated();
+  const [time, setTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setTime(new Date());
+    const interval = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formattedTime = time
+    ? time.toLocaleDateString("en-IN", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }) + " | " + time.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      }).toUpperCase()
+    : "";
 
   // Theme sync
   useEffect(() => {
@@ -150,6 +178,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                 }}
               />
             </div>
+
+            {formattedTime && (
+              <div className="hidden md:flex items-center gap-2 font-mono text-xs font-semibold text-muted-foreground bg-secondary/40 px-3 py-1.5 rounded-xl border border-border/60 ml-4">
+                <Clock className="h-3.5 w-3.5 text-primary animate-pulse" />
+                {formattedTime}
+              </div>
+            )}
 
             <div className="ml-auto flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">

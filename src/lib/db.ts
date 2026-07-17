@@ -515,20 +515,20 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
       // YYYY-MM-DD -> DD/MM/YYYY
       formattedDate = date.split("-").reverse().join("/");
     } else {
-      const d = new Date();
-      const day = String(d.getDate()).padStart(2, "0");
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const year = d.getFullYear();
-      formattedDate = `${day}/${month}/${year}`;
+      formattedDate = new Date().toLocaleDateString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
     }
 
-    const now = new Date();
-    let hours = now.getHours();
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const formattedTime = `${hours}:${minutes} ${ampm}`;
+    const formattedTime = new Date().toLocaleTimeString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    }).toUpperCase();
 
     const messageText = template
       .replace("[student_name]", studentName)
@@ -922,8 +922,17 @@ export const sendBulkAttendanceAlerts = createServerFn({ method: "POST" })
     let sentCount = 0;
     let failedCount = 0;
     const now = new Date();
-    const timeStr = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
-    const dateStr = new Date(data.date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    const timeStr = now.toLocaleTimeString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    }).toUpperCase();
+
+    // Avoid server timezone shifts when parsing YYYY-MM-DD
+    const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const parts = data.date.split("-");
+    const dateStr = `${parseInt(parts[2], 10)} ${MONTHS[parseInt(parts[1], 10) - 1]} ${parts[0]}`;
 
     for (const rec of attendanceRecords) {
       const parentMobile = rec.fatherMobile || rec.motherMobile;

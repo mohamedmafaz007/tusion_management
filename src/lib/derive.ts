@@ -2,9 +2,17 @@ import type { Student, AttendanceRecord, FeePayment } from "./types";
 
 export function studentAttendancePct(studentId: string, records: AttendanceRecord[]): number {
   const rs = records.filter((r) => r.studentId === studentId && r.status !== "Holiday");
-  if (!rs.length) return 0;
-  const present = rs.filter((r) => r.status === "Present" || r.status === "Late").length;
-  return Math.round((present / rs.length) * 100);
+  if (!rs.length) return 100;
+  
+  // Deduplicate by date
+  const uniqueDates = new Map<string, AttendanceRecord>();
+  for (const r of rs) {
+    uniqueDates.set(r.date, r);
+  }
+  const uniqueRecords = Array.from(uniqueDates.values());
+
+  const present = uniqueRecords.filter((r) => r.status === "Present" || r.status === "Late").length;
+  return Math.round((present / uniqueRecords.length) * 100);
 }
 
 export function studentFeeStatus(studentId: string, fees: FeePayment[]) {
