@@ -14,7 +14,8 @@ import {
   Settings as SettingsIcon,
   HelpCircle,
   Trash2,
-  Loader2
+  Loader2,
+  Sparkles
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ import {
   sendMonthlyFeeReminders, 
   sendFeeOverdueReminders, 
   checkAndSendBirthdayWishes,
+  checkAndSendFestivalGreetings,
   getBaileysStatus,
   deleteDbMessageLog,
   clearAllDbMessageLogs
@@ -258,7 +260,34 @@ function MessageLogsPage() {
       setIsSendingBirthdays(false);
     }
   };
+  const [isSendingFestivals, setIsSendingFestivals] = useState(false);
 
+  const triggerFestivalGreetings = async () => {
+    if (wsStatus !== "connected") {
+      toast.error("WhatsApp must be connected to send automated greetings. Please pair in Settings.");
+      return;
+    }
+
+    setIsSendingFestivals(true);
+    const loader = toast.loading(`Checking for today's Indian festivals...`);
+    try {
+      const res = await checkAndSendFestivalGreetings();
+      if (res.manual) {
+        toast.error("WhatsApp provider is set to manual. Cannot send festival greetings automatically.", { id: loader });
+      } else {
+        if (!res.festival) {
+          toast.info("No Indian festival greetings registered for today's date.", { id: loader });
+        } else {
+          toast.success(`Success! Dispatched ${res.sent} wishes for ${res.festival} (${res.failed} failed)`, { id: loader });
+          handleRefreshAll();
+        }
+      }
+    } catch (err: any) {
+      toast.error(`Failed: ${err.message || err}`, { id: loader });
+    } finally {
+      setIsSendingFestivals(false);
+    }
+  };
   return (
     <div className="space-y-6">
       <PageHeader
@@ -322,7 +351,7 @@ function MessageLogsPage() {
           Trigger Automated Campaigns
         </h3>
         
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {/* Fee Reminders Card */}
           <div className="flex flex-col justify-between p-4 rounded-xl border border-border/60 bg-accent/20 hover:bg-accent/30 transition-all">
             <div className="space-y-2">
@@ -403,6 +432,36 @@ function MessageLogsPage() {
                   </>
                 ) : (
                   "Trigger Birthdays Wish"
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Festival Greetings Card */}
+          <div className="flex flex-col justify-between p-4 rounded-xl border border-border/60 bg-accent/20 hover:bg-accent/30 transition-all">
+            <div className="space-y-2">
+              <h4 className="font-bold flex items-center gap-2 text-sm text-foreground">
+                <Sparkles className="h-4 w-4 text-amber-500" />
+                Festival Greetings
+              </h4>
+              <p className="text-xs text-muted-foreground font-normal">
+                Scans today's date for major Indian festivals and automatically delivers a beautiful wishing template to parents.
+              </p>
+            </div>
+            
+            <div className="mt-4">
+              <Button 
+                onClick={triggerFestivalGreetings} 
+                disabled={isSendingFestivals}
+                className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs"
+                size="sm"
+              >
+                {isSendingFestivals ? (
+                  <>
+                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Sending...
+                  </>
+                ) : (
+                  "Trigger Festival Wishes"
                 )}
               </Button>
             </div>

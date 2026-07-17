@@ -1223,3 +1223,131 @@ export const checkAndSendBirthdayWishes = createServerFn({ method: "POST" })
 
     return { success: true, sent: sentCount, failed: failedCount, birthdaysFound: birthdayStudents.length };
   });
+
+// ────────────────────────────────────────────────────────────────
+// Festival Greetings Automation
+// ────────────────────────────────────────────────────────────────
+
+const FESTIVALS: Record<string, { name: string; wish: string }> = {
+  // 2026
+  "2026-01-01": { name: "New Year's Day", wish: "Happy New Year! May this year bring joy, peace, and success to you and your family. 🎉" },
+  "2026-01-14": { name: "Pongal / Makar Sankranti", wish: "Wishing you a very Happy Pongal and Makar Sankranti! May the harvest season bring abundance and sweet moments. 🌾" },
+  "2026-01-26": { name: "Republic Day", wish: "Happy Republic Day! Let us salute the nation and honor our constitution. 🇮🇳" },
+  "2026-02-15": { name: "Maha Shivaratri", wish: "Wishing you a blessed Maha Shivaratri. May Lord Shiva bless you with peace and wisdom. 🔱" },
+  "2026-03-03": { name: "Holi", wish: "Happy Holi! May your life be filled with vibrant colors of happiness, love, and laughter. 🎨" },
+  "2026-03-20": { name: "Eid al-Fitr", wish: "Eid Mubarak! Wishing you and your family a blessed day filled with joy and happiness. 🌙" },
+  "2026-04-03": { name: "Good Friday", wish: "Have a blessed Good Friday. May the love and grace of God shine upon you today and always. 🕯️" },
+  "2026-04-14": { name: "Tamil New Year / Puthandu", wish: "Iniya Puthandu Vazhthukkal! May this Tamil New Year bring health, prosperity, and happiness. 🍊🎉" },
+  "2026-05-27": { name: "Eid al-Adha", wish: "Eid al-Adha Mubarak! May your faith and devotion be rewarded with happiness, peace, and blessings. 🌙" },
+  "2026-08-15": { name: "Independence Day", wish: "Happy Independence Day! Let us celebrate the freedom and unity of our great nation. 🇮🇳" },
+  "2026-09-04": { name: "Krishna Janmashtami", wish: "Happy Janmashtami! May Lord Krishna steal all your worries and bless you with happiness and love. 🍯" },
+  "2026-09-15": { name: "Ganesh Chaturthi", wish: "Happy Ganesh Chaturthi! May Lord Ganesha bless you with intelligence, prosperity, and success. 🐘" },
+  "2026-10-02": { name: "Gandhi Jayanti", wish: "Happy Gandhi Jayanti! Let us remember and honor the father of our nation and follow the path of truth. 👓" },
+  "2026-10-20": { name: "Vijayadashami / Dussehra", wish: "Happy Dussehra! May the victory of good over evil bring joy, peace, and prosperity to you. 🏹" },
+  "2026-11-08": { name: "Diwali", wish: "Wishing you a very Happy and Safe Diwali! May the festival of lights illuminate your life with happiness and wealth. 🪔" },
+  "2026-12-25": { name: "Christmas", wish: "Merry Christmas! May the holiday season fill your home with joy, love, and laughter. 🎄" },
+
+  // 2027
+  "2027-01-01": { name: "New Year's Day", wish: "Happy New Year! May this year bring joy, peace, and success to you and your family. 🎉" },
+  "2027-01-14": { name: "Pongal / Makar Sankranti", wish: "Wishing you a very Happy Pongal and Makar Sankranti! May the harvest season bring abundance and sweet moments. 🌾" },
+  "2027-01-26": { name: "Republic Day", wish: "Happy Republic Day! Let us salute the nation and honor our constitution. 🇮🇳" },
+  "2027-03-06": { name: "Maha Shivaratri", wish: "Wishing you a blessed Maha Shivaratri. May Lord Shiva bless you with peace and wisdom. 🔱" },
+  "2027-03-09": { name: "Eid al-Fitr", wish: "Eid Mubarak! Wishing you and your family a blessed day filled with joy and happiness. 🌙" },
+  "2027-03-22": { name: "Holi", wish: "Happy Holi! May your life be filled with vibrant colors of happiness, love, and laughter. 🎨" },
+  "2027-03-26": { name: "Good Friday", wish: "Have a blessed Good Friday. May the love and grace of God shine upon you today and always. 🕯️" },
+  "2027-04-14": { name: "Tamil New Year / Puthandu", wish: "Iniya Puthandu Vazhthukkal! May this Tamil New Year bring health, prosperity, and happiness. 🍊🎉" },
+  "2027-05-16": { name: "Eid al-Adha", wish: "Eid al-Adha Mubarak! May your faith and devotion be rewarded with happiness, peace, and blessings. 🌙" },
+  "2027-08-15": { name: "Independence Day", wish: "Happy Independence Day! Let us celebrate the freedom and unity of our great nation. 🇮🇳" },
+  "2027-08-25": { name: "Krishna Janmashtami", wish: "Happy Janmashtami! May Lord Krishna steal all your worries and bless you with happiness and love. 🍯" },
+  "2027-09-04": { name: "Ganesh Chaturthi", wish: "Happy Ganesh Chaturthi! May Lord Ganesha bless you with intelligence, prosperity, and success. 🐘" },
+  "2027-10-02": { name: "Gandhi Jayanti", wish: "Happy Gandhi Jayanti! Let us remember and honor the father of our nation and follow the path of truth. 👓" },
+  "2027-10-09": { name: "Vijayadashami / Dussehra", wish: "Happy Dussehra! May the victory of good over evil bring joy, peace, and prosperity to you. 🏹" },
+  "2027-10-29": { name: "Diwali", wish: "Wishing you a very Happy and Safe Diwali! May the festival of lights illuminate your life with happiness and wealth. 🪔" },
+  "2027-12-25": { name: "Christmas", wish: "Merry Christmas! May the holiday season fill your home with joy, love, and laughter. 🎄" },
+
+  // 2028
+  "2028-01-01": { name: "New Year's Day", wish: "Happy New Year! May this year bring joy, peace, and success to you and your family. 🎉" },
+  "2028-01-14": { name: "Pongal / Makar Sankranti", wish: "Wishing you a very Happy Pongal and Makar Sankranti! May the harvest season bring abundance and sweet moments. 🌾" },
+  "2028-01-26": { name: "Republic Day", wish: "Happy Republic Day! Let us salute the nation and honor our constitution. 🇮🇳" },
+  "2028-02-23": { name: "Maha Shivaratri", wish: "Wishing you a blessed Maha Shivaratri. May Lord Shiva bless you with peace and wisdom. 🔱" },
+  "2028-02-26": { name: "Eid al-Fitr", wish: "Eid Mubarak! Wishing you and your family a blessed day filled with joy and happiness. 🌙" },
+  "2028-03-11": { name: "Holi", wish: "Happy Holi! May your life be filled with vibrant colors of happiness, love, and laughter. 🎨" },
+  "2028-04-14": { name: "Tamil New Year / Puthandu", wish: "Iniya Puthandu Vazhthukkal! May this Tamil New Year bring health, prosperity, and happiness. 🍊🎉" },
+  "2028-04-14": { name: "Good Friday", wish: "Have a blessed Good Friday. May the love and grace of God shine upon you today and always. 🕯️" },
+  "2028-05-05": { name: "Eid al-Adha", wish: "Eid al-Adha Mubarak! May your faith and devotion be rewarded with happiness, peace, and blessings. 🌙" },
+  "2028-08-13": { name: "Krishna Janmashtami", wish: "Happy Janmashtami! May Lord Krishna steal all your worries and bless you with happiness and love. 🍯" },
+  "2028-08-15": { name: "Independence Day", wish: "Happy Independence Day! Let us celebrate the freedom and unity of our great nation. 🇮🇳" },
+  "2028-08-24": { name: "Ganesh Chaturthi", wish: "Happy Ganesh Chaturthi! May Lord Ganesha bless you with intelligence, prosperity, and success. 🐘" },
+  "2028-10-02": { name: "Gandhi Jayanti", wish: "Happy Gandhi Jayanti! Let us remember and honor the father of our nation and follow the path of truth. 👓" },
+  "2028-10-17": { name: "Diwali", wish: "Wishing you a very Happy and Safe Diwali! May the festival of lights illuminate your life with happiness and wealth. 🪔" },
+  "2028-10-27": { name: "Vijayadashami / Dussehra", wish: "Happy Dussehra! May the victory of good over evil bring joy, peace, and prosperity to you. 🏹" },
+  "2028-12-25": { name: "Christmas", wish: "Merry Christmas! May the holiday season fill your home with joy, love, and laughter. 🎄" }
+};
+
+export const checkAndSendFestivalGreetings = createServerFn({ method: "POST" })
+  .handler(async () => {
+    const sql = await getSql();
+    if (!sql) throw new Error("Database not connected");
+
+    const settings = await getDbSettings();
+    if (!settings) throw new Error("Settings not configured");
+
+    const provider = settings.whatsappProvider || "manual";
+    if (provider === "manual") return { success: true, manual: true, sent: 0 };
+
+    const ws = await getWhatsAppService();
+    if (!ws) throw new Error("WhatsApp service not available");
+
+    // Fetch local day in Indian Standard Time (IST) YYYY-MM-DD
+    const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+    const festival = FESTIVALS[todayStr];
+    if (!festival) {
+      return { success: true, festival: null, sent: 0 };
+    }
+
+    const students = await sql`SELECT * FROM students`;
+    let sentCount = 0;
+    let failedCount = 0;
+
+    for (const s of students) {
+      const parentMobile = s.fatherMobile || s.motherMobile;
+      if (!parentMobile) continue;
+
+      const messageText = `Dear Parent, Vishwa Tuition Center wishes you and your family a very ${festival.name}.
+
+${festival.wish}
+
+Regards,
+Vishwa Tuition Center`;
+
+      try {
+        if (provider === "baileys") {
+          await ws.sendWhatsAppTextMessage(parentMobile, messageText);
+        }
+        await logMessage({
+          type: "campaign",
+          studentId: s.id,
+          studentName: s.name,
+          recipientPhone: parentMobile,
+          message: messageText,
+          status: "sent",
+        });
+        sentCount++;
+      } catch (err: any) {
+        await logMessage({
+          type: "campaign",
+          studentId: s.id,
+          studentName: s.name,
+          recipientPhone: parentMobile,
+          message: messageText,
+          status: "failed",
+          error: err.message || String(err),
+        });
+        failedCount++;
+      }
+
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+
+    return { success: true, festival: festival.name, sent: sentCount, failed: failedCount };
+  });

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { checkAndSendBirthdayWishes, sendMonthlyFeeReminders } from "@/lib/db";
+import { checkAndSendBirthdayWishes, sendMonthlyFeeReminders, checkAndSendFestivalGreetings } from "@/lib/db";
 
 export const Route = createFileRoute("/api/cron")({
   server: {
@@ -10,7 +10,10 @@ export const Route = createFileRoute("/api/cron")({
           // 1. Deliver today's birthday wishes
           const birthdayRes = await checkAndSendBirthdayWishes();
 
-          // 2. On the 1st day of the month, dispatch fee reminders automatically
+          // 2. Deliver today's festival greetings
+          const festivalRes = await checkAndSendFestivalGreetings();
+
+          // 3. On the 1st day of the month, dispatch fee reminders automatically
           let feeRes: any = { sent: 0, failed: 0, total: 0 };
           const today = new Date();
           if (today.getDate() === 1) {
@@ -26,6 +29,11 @@ export const Route = createFileRoute("/api/cron")({
                 found: birthdayRes.birthdaysFound || 0,
                 sent: birthdayRes.sent || 0,
                 failed: birthdayRes.failed || 0,
+              },
+              festivals: {
+                name: festivalRes.festival || "None",
+                sent: festivalRes.sent || 0,
+                failed: festivalRes.failed || 0,
               },
               feeReminders: {
                 sent: feeRes.sent || 0,
