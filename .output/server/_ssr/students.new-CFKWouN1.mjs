@@ -6,13 +6,13 @@ import { n as Input, t as Button, w as sendWhatsAppAlert } from "./db-_-56JTAZ.m
 import { a as uid, d as useStudents, i as STANDARDS, u as useSettings } from "./hooks-P7UI8aLI.mjs";
 import { _ as Save, j as LoaderCircle, ot as Camera, v as RotateCcw } from "../_libs/lucide-react.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { n as PageHeader } from "./AppShell-_OWaNo8O.mjs";
+import { n as PageHeader } from "./AppShell-BP_3GgOB.mjs";
 import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-HRfI_rwd.mjs";
 import { t as Label } from "./label-B6_btTH_.mjs";
 import { i as stringType, n as enumType, r as objectType, t as coerce } from "../_libs/zod.mjs";
 import { t as Textarea } from "./textarea-BX6VBtBM.mjs";
 import { n as useForm, t as u } from "../_libs/@hookform/resolvers+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/students.new-F3NhRElZ.js
+//#region node_modules/.nitro/vite/services/ssr/assets/students.new-CFKWouN1.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var schema = objectType({

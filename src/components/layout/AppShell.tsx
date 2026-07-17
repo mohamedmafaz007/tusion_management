@@ -282,9 +282,22 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <main className="flex-1 p-4 md:p-6 lg:p-8 animate-in fade-in duration-300">{children}</main>
 
-        <footer className="border-t border-border/60 px-6 py-4 text-center text-xs text-muted-foreground">
-          <Badge variant="secondary" className="mr-2">v1.0</Badge>
-          © {new Date().getFullYear()} {settings.instituteName} — Premium Tuition Suite
+        <footer className="border-t border-border/60 px-6 py-4 text-xs text-muted-foreground flex flex-col items-center justify-center gap-2 sm:flex-row sm:justify-between">
+          <div>
+            <Badge variant="secondary" className="mr-2">v1.0</Badge>
+            © {new Date().getFullYear()} {settings.instituteName} — Premium Tuition Suite
+          </div>
+          <div className="text-[11px] opacity-80 hover:opacity-100 transition-opacity">
+            Developed by{" "}
+            <a 
+              href="https://innoaivators.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-semibold text-primary hover:underline"
+            >
+              innoaivators.com
+            </a>
+          </div>
         </footer>
       </div>
     </div>

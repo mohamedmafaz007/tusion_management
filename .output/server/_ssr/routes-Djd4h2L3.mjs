@@ -5,12 +5,12 @@ import { P as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+
 import { s as cn, t as Button } from "./db-_-56JTAZ.mjs";
 import { c as useHydrated, d as useStudents, i as STANDARDS, o as useAttendance, s as useFees } from "./hooks-P7UI8aLI.mjs";
 import { W as Download, a as UserPlus, at as ChartColumn, ct as CalendarCheck, ft as ArrowRight, i as UserX, l as TrendingUp, lt as BookOpen, n as Wallet, o as UserCheck, r as Users } from "../_libs/lucide-react.mjs";
-import { n as PageHeader } from "./AppShell-_OWaNo8O.mjs";
+import { n as PageHeader } from "./AppShell-BP_3GgOB.mjs";
 import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-HRfI_rwd.mjs";
 import { t as StatCard } from "./StatCard-B6Zbhul9.mjs";
 import { a as studentAvatarStyle, n as formatCurrency, r as initials, s as todayKey, t as currentMonthKey } from "./derive-B-AOoH3y.mjs";
 import { a as XAxis, c as Bar, d as ResponsiveContainer, f as Tooltip, i as YAxis, l as Pie, n as BarChart, o as Line, p as Legend, r as LineChart, s as CartesianGrid, t as PieChart, u as Cell } from "../_libs/recharts+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-BlOSBo7p.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-Djd4h2L3.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function Skeleton({ className, ...props }) {
