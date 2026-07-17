@@ -157,24 +157,28 @@ export function seedIfNeeded() {
 
   if (localStorage.getItem(KEYS.seeded)) return;
 
-  const students: Student[] = SAMPLE_NAMES.map((name, i) => ({
-    id: uid(),
-    name,
-    gender: i % 3 === 0 ? "Female" : "Male",
-    dob: `20${10 + (i % 6)}-0${(i % 9) + 1}-1${i % 9}`,
-    school: SCHOOLS[i % SCHOOLS.length],
-    standard: STDS[i % STDS.length],
-    section: ["A", "B", "C"][i % 3],
-    parentName: `Parent of ${name.split(" ")[0]}`,
-    fatherMobile: `98${(1000000 + i * 12345).toString().slice(0, 8)}`,
-    motherMobile: `97${(2000000 + i * 54321).toString().slice(0, 8)}`,
-    address: `${i + 1} Sample Street, City`,
-    joiningDate: `2024-0${(i % 9) + 1}-15`,
-    monthlyFees: 1500 + (i % 5) * 500,
-    admissionFees: 2000,
-    notes: "",
-    createdAt: new Date(Date.now() - i * 86400000).toISOString(),
-  }));
+  const students: Student[] = SAMPLE_NAMES.map((name, i) => {
+    const sId = uid();
+    return {
+      id: sId,
+      registrationNo: `VTC-${sId.slice(0, 6).toUpperCase()}`,
+      name,
+      gender: i % 3 === 0 ? "Female" : "Male",
+      dob: `20${10 + (i % 6)}-0${(i % 9) + 1}-1${i % 9}`,
+      school: SCHOOLS[i % SCHOOLS.length],
+      standard: STDS[i % STDS.length],
+      section: ["A", "B", "C"][i % 3],
+      parentName: `Parent of ${name.split(" ")[0]}`,
+      fatherMobile: `98${(1000000 + i * 12345).toString().slice(0, 8)}`,
+      motherMobile: `97${(2000000 + i * 54321).toString().slice(0, 8)}`,
+      address: `${i + 1} Sample Street, City`,
+      joiningDate: `2024-0${(i % 9) + 1}-15`,
+      monthlyFees: 1500 + (i % 5) * 500,
+      admissionFees: 2000,
+      notes: "",
+      createdAt: new Date(Date.now() - i * 86400000).toISOString(),
+    };
+  });
   setStudents(students);
 
   // Seed 30 days attendance

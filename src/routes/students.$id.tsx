@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Pencil, Trash2, Phone, MapPin, Calendar, School as SchoolIcon, Save, X } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Phone, MapPin, Calendar, School as SchoolIcon, Save, X, Download } from "lucide-react";
+import { getRegistrationPdf } from "@/lib/db";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -178,6 +179,27 @@ function StudentProfilePage() {
     navigate({ to: "/students" });
   };
 
+  const downloadForm = async () => {
+    const loader = toast.loading("Generating registration form PDF...");
+    try {
+      const res = await getRegistrationPdf({ data: { studentId: student.id } });
+      if (res && res.pdfBase64) {
+        const link = document.createElement("a");
+        link.href = `data:application/pdf;base64,${res.pdfBase64}`;
+        link.download = res.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Registration form downloaded successfully!", { id: loader });
+      } else {
+        toast.error("Failed to generate PDF.", { id: loader });
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Download failed: ${err.message || err}`, { id: loader });
+    }
+  };
+
   const assignedMaterials = materials.filter((m) => m.standard === student.standard).slice(0, 6);
 
   return (
@@ -216,6 +238,9 @@ function StudentProfilePage() {
           <div className="flex flex-wrap items-start gap-2 pt-4">
             {!edit ? (
               <>
+                <Button variant="outline" className="rounded-xl" onClick={downloadForm}>
+                  <Download className="mr-2 h-4 w-4" /> Download Form
+                </Button>
                 <Button variant="outline" className="rounded-xl" onClick={() => { setDraft(student); setDraftPending(fs.pending); setEdit(true); }}>
                   <Pencil className="mr-2 h-4 w-4" /> Edit
                 </Button>

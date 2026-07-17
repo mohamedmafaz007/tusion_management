@@ -20,7 +20,7 @@ import { useStudents, useSettings } from "@/lib/hooks";
 import { uid } from "@/lib/storage";
 import { STANDARDS } from "@/lib/types";
 import { toast } from "sonner";
-import { sendWhatsAppAlert } from "@/lib/db";
+import { sendWhatsAppAlert, getRegistrationPdf } from "@/lib/db";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Name is required").max(100),
@@ -101,11 +101,29 @@ function NewStudentPage() {
     setIsSaving(true);
     try {
       const studentId = uid();
+      const registrationNo = `VTC-${studentId.slice(0, 6).toUpperCase()}`;
       await setStudentsState([
         ...students,
-        { ...data, id: studentId, photo, createdAt: new Date().toISOString() },
+        { ...data, id: studentId, registrationNo, photo, createdAt: new Date().toISOString() },
       ]);
       toast.success(`${data.name} registered successfully!`);
+
+      // Automatically download registration form
+      try {
+        const res = await getRegistrationPdf({ data: { studentId } });
+        if (res && res.pdfBase64) {
+          const link = document.createElement("a");
+          link.href = `data:application/pdf;base64,${res.pdfBase64}`;
+          link.download = res.filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          toast.success("Registration form downloaded automatically!");
+        }
+      } catch (pdfErr) {
+        console.error("Failed to automatically download registration form:", pdfErr);
+        toast.error("Student registered, but automatic PDF download failed.");
+      }
 
       // Send Welcome WhatsApp alert
       const parentPhones = [data.fatherMobile, data.motherMobile].filter(Boolean);

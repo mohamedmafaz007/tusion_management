@@ -5,6 +5,7 @@ export type Gender = "Male" | "Female" | "Other";
 
 export interface Student {
   id: string;
+  registrationNo: string;
   photo?: string; // base64
   name: string;
   gender: Gender;

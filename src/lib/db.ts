@@ -55,6 +55,7 @@ export async function initDb() {
     await sql`
       CREATE TABLE IF NOT EXISTS students (
         "id" TEXT PRIMARY KEY,
+        "registrationNo" TEXT,
         "photo" TEXT,
         "name" TEXT NOT NULL,
         "gender" TEXT NOT NULL,
@@ -73,6 +74,12 @@ export async function initDb() {
         "createdAt" TEXT NOT NULL
       )
     `;
+
+    try {
+      await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS "registrationNo" TEXT`;
+    } catch (e) {
+      console.warn("Failed to add registrationNo column (it might already exist):", e);
+    }
 
     // 2. Attendance table
     await sql`
@@ -164,6 +171,7 @@ export const getDbStudents = createServerFn({ method: "GET" })
       const rows = await sql`SELECT * FROM students`;
       return rows.map(r => ({
         id: r.id as string,
+        registrationNo: (r.registrationNo as string) || `VTC-${(r.id as string).slice(0, 6).toUpperCase()}`,
         photo: r.photo as string | undefined,
         name: r.name as string,
         gender: r.gender as any,
@@ -195,6 +203,7 @@ export const syncDbStudents = createServerFn({ method: "POST" })
 
     const sanitized = students.map(s => ({
       id: s.id || "",
+      registrationNo: s.registrationNo || `VTC-${(s.id || "").slice(0, 6).toUpperCase()}`,
       photo: s.photo === undefined ? null : s.photo,
       name: s.name || "",
       gender: s.gender || "Male",
@@ -227,7 +236,7 @@ export const syncDbStudents = createServerFn({ method: "POST" })
         await sql`DELETE FROM students`;
         if (deduplicated.length > 0) {
           await sql`
-            INSERT INTO students ${(sql as any)(deduplicated, ["id", "photo", "name", "gender", "dob", "school", "standard", "section", "parentName", "fatherMobile", "motherMobile", "address", "joiningDate", "monthlyFees", "admissionFees", "notes", "createdAt"])}
+            INSERT INTO students ${(sql as any)(deduplicated, ["id", "registrationNo", "photo", "name", "gender", "dob", "school", "standard", "section", "parentName", "fatherMobile", "motherMobile", "address", "joiningDate", "monthlyFees", "admissionFees", "notes", "createdAt"])}
           `;
         }
       });
@@ -621,6 +630,7 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
               address: settings.address || "",
               contact: settings.contact || "",
               student: {
+                registrationNo: student.registrationNo || `VTC-${student.id.slice(0, 6).toUpperCase()}`,
                 name: student.name,
                 gender: student.gender,
                 dob: student.dob,
@@ -1393,4 +1403,50 @@ export const loginAdmin = createServerFn({ method: "POST" })
       return { success: true, token: "vishwa_admin_session_token_123" };
     }
     return { success: false, error: "Incorrect password" };
+  });
+
+export const getRegistrationPdf = createServerFn({ method: "POST" })
+  .validator((data: { studentId: string }) => data)
+  .handler(async ({ data }) => {
+    const sql = await getSql();
+    if (!sql) throw new Error("Database not connected");
+
+    const settings = await getDbSettings();
+    if (!settings) throw new Error("Settings not configured");
+
+    const rows = await sql`SELECT * FROM students WHERE id = ${data.studentId}`;
+    if (rows.length === 0) throw new Error("Student not found");
+    const student = rows[0];
+
+    const ws = await getWhatsAppService();
+    if (!ws) throw new Error("WhatsApp service not available");
+
+    const pdfBuffer = await ws.generateRegistrationPdf({
+      instituteName: settings.instituteName || "Vishwa Tuition Center",
+      address: settings.address || "",
+      contact: settings.contact || "",
+      student: {
+        registrationNo: student.registrationNo || `VTC-${student.id.slice(0, 6).toUpperCase()}`,
+        name: student.name,
+        gender: student.gender,
+        dob: student.dob,
+        school: student.school,
+        standard: student.standard,
+        section: student.section,
+        parentName: student.parentName,
+        fatherMobile: student.fatherMobile,
+        motherMobile: student.motherMobile,
+        address: student.address,
+        joiningDate: student.joiningDate,
+        monthlyFees: Number(student.monthlyFees),
+        admissionFees: Number(student.admissionFees),
+        notes: student.notes || "",
+        photo: student.photo || ""
+      }
+    });
+
+    return {
+      pdfBase64: pdfBuffer.toString("base64"),
+      filename: `Registration_Form_${student.name.replace(/\s+/g, "_")}.pdf`
+    };
   });

@@ -358,6 +358,7 @@ export function generateRegistrationPdf(data: {
   address: string;
   contact: string;
   student: {
+    registrationNo: string;
     name: string; gender: string; dob: string; school: string;
     standard: string; section: string; parentName: string;
     fatherMobile: string; motherMobile: string; address: string;
@@ -410,7 +411,7 @@ export function generateRegistrationPdf(data: {
         currY += gap;
       };
 
-      drawField("Application ID", `VTC-${Math.random().toString(36).substr(2, 6).toUpperCase()}`);
+      drawField("Registration No", data.student.registrationNo);
       drawField("Full Name", data.student.name);
       drawField("Gender", data.student.gender);
       drawField("Date of Birth", data.student.dob);
