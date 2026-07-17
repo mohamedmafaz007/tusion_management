@@ -2,16 +2,16 @@ import { o as __toESM } from "../_runtime.mjs";
 import { _ as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { P as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { E as uid, M as useStudents, b as sendWhatsAppAlert, i as Input, j as useSettings, n as Button, o as STANDARDS } from "./hooks-h34XCI4a.mjs";
+import { E as uid, M as useStudents, b as sendWhatsAppAlert, i as Input, j as useSettings, n as Button, o as STANDARDS } from "./hooks-BF2-w1wh.mjs";
 import { _ as RotateCcw, g as Save, k as LoaderCircle, rt as Camera } from "../_libs/lucide-react.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { n as PageHeader } from "./AppShell-Dqmn1Ujt.mjs";
-import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-BKTz6aO9.mjs";
-import { t as Label } from "./label-DXw4xqN9.mjs";
+import { n as PageHeader } from "./AppShell-Dcrbbbdf.mjs";
+import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-DRHudf8v.mjs";
+import { t as Label } from "./label-Dr-ntTUY.mjs";
 import { i as stringType, n as enumType, r as objectType, t as coerce } from "../_libs/zod.mjs";
-import { t as Textarea } from "./textarea-Dga61fX1.mjs";
+import { t as Textarea } from "./textarea-snBP0Cei.mjs";
 import { n as useForm, t as u } from "../_libs/@hookform/resolvers+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/students.new-D6Oi2oib.js
+//#region node_modules/.nitro/vite/services/ssr/assets/students.new-DxCid_cn.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var schema = objectType({

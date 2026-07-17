@@ -1,5 +1,5 @@
 import { c as createServerFn, i as TSS_SERVER_FUNCTION } from "./createServerFn-CIHAFgYl.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/db-DUu_-UPv.js
+//#region node_modules/.nitro/vite/services/ssr/assets/db-CQj05CRb.js
 var createServerRpc = (serverFnMeta, splitImportFn) => {
 	const url = "/_serverFn/" + serverFnMeta.id;
 	return Object.assign(splitImportFn, {
@@ -641,7 +641,7 @@ var sendWhatsAppAlert = createServerFn({ method: "POST" }).validator((data) => d
 	};
 });
 async function getWhatsAppService() {
-	if (typeof window === "undefined") return await import("./whatsappService-DxfPNy6J.mjs");
+	if (typeof window === "undefined") return await import("./whatsappService-a6xTCnnO.mjs");
 	return null;
 }
 var getBaileysStatus_createServerFn_handler = createServerRpc({

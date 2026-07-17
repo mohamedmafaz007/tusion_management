@@ -404,7 +404,7 @@ export function generateRegistrationPdf(data: {
 
       const fieldsX = 45;
       let currY = 155;
-      const drawField = (label: string, value: string, gap = 18) => {
+      const drawField = (label: string, value: string, gap = 16) => {
         doc.fillColor("#64748b").font("Helvetica-Bold").fontSize(9.5).text(`${label}:`, fieldsX, currY);
         doc.fillColor(primaryColor).font("Helvetica").fontSize(10).text(value || "—", fieldsX + 120, currY);
         currY += gap;
@@ -427,7 +427,7 @@ export function generateRegistrationPdf(data: {
       drawField("Parent/Guardian", data.student.parentName);
       drawField("Father Mobile", data.student.fatherMobile);
       drawField("Mother Mobile", data.student.motherMobile);
-      drawField("Residential Address", data.student.address, 24);
+      drawField("Residential Address", data.student.address, 20);
 
       doc.moveTo(45, currY).lineTo(doc.page.width - 45, currY).lineWidth(0.5).strokeColor(dividerColor).stroke();
       currY += 12;
@@ -436,7 +436,7 @@ export function generateRegistrationPdf(data: {
       currY += 18;
       drawField("Admission Fee", `Rs. ${data.student.admissionFees}`);
       drawField("Monthly Tuition Fee", `Rs. ${data.student.monthlyFees}`);
-      if (data.student.notes) drawField("Additional Notes", data.student.notes, 24);
+      if (data.student.notes) drawField("Additional Notes", data.student.notes, 20);
 
       const sigY = doc.page.height - 95;
       doc.moveTo(45, sigY).lineTo(175, sigY).moveTo(doc.page.width - 175, sigY)
@@ -445,7 +445,7 @@ export function generateRegistrationPdf(data: {
          .text("Parent/Guardian Signature", 45, sigY + 5, { width: 130, align: "center" })
          .text("Office Administrator", doc.page.width - 175, sigY + 5, { width: 130, align: "center" });
       doc.fillColor("#94a3b8").font("Helvetica-Oblique").fontSize(7.5)
-         .text("This application form details the registered profile in Vishwa Tuition Center database.", 45, doc.page.height - 35, { align: "center" });
+         .text("This application form details the registered profile in Vishwa Tuition Center database.", 45, doc.page.height - 50, { align: "center" });
 
       doc.end();
     } catch (err) { reject(err); }

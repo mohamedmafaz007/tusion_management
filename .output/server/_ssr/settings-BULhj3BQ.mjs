@@ -1,15 +1,15 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { P as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { C as syncDbFees, S as syncDbAttendance, T as syncDbStudents, d as connectBaileys, i as Input, j as useSettings, m as getBaileysStatus, n as Button, p as disconnectBaileys, r as DEFAULT_SETTINGS, u as cn, w as syncDbMaterials } from "./hooks-h34XCI4a.mjs";
+import { C as syncDbFees, S as syncDbAttendance, T as syncDbStudents, d as connectBaileys, i as Input, j as useSettings, m as getBaileysStatus, n as Button, p as disconnectBaileys, r as DEFAULT_SETTINGS, u as cn, w as syncDbMaterials } from "./hooks-BF2-w1wh.mjs";
 import { J as CircleCheckBig, d as Sun, g as Save, k as LoaderCircle, s as Upload, st as Bell, w as Moon } from "../_libs/lucide-react.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { n as PageHeader } from "./AppShell-Dqmn1Ujt.mjs";
-import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-BKTz6aO9.mjs";
-import { t as Label } from "./label-DXw4xqN9.mjs";
-import { t as Textarea } from "./textarea-Dga61fX1.mjs";
+import { n as PageHeader } from "./AppShell-Dcrbbbdf.mjs";
+import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-DRHudf8v.mjs";
+import { t as Label } from "./label-Dr-ntTUY.mjs";
+import { t as Textarea } from "./textarea-snBP0Cei.mjs";
 import { n as SwitchThumb, t as Switch$1 } from "../_libs/radix-ui__react-switch.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/settings-z97HUEyN.js
+//#region node_modules/.nitro/vite/services/ssr/assets/settings-BULhj3BQ.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Switch = import_react.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Switch$1, {

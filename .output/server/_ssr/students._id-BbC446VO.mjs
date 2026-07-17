@@ -1,6 +1,6 @@
 import { m as createFileRoute, p as lazyRouteComponent } from "../_libs/@tanstack/react-router+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/students._id-BI3oj-TU.js
-var $$splitComponentImporter = () => import("./students._id-BJAa0AeB.mjs");
+//#region node_modules/.nitro/vite/services/ssr/assets/students._id-BbC446VO.js
+var $$splitComponentImporter = () => import("./students._id-D5vrU9IE.mjs");
 var Route = createFileRoute("/students/$id")({
 	head: () => ({ meta: [{ title: "Student Profile — Vishwa Tuition Center" }, {
 		name: "description",
