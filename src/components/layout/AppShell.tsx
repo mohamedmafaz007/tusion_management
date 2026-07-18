@@ -248,11 +248,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <button className="flex items-center gap-2 rounded-full pl-1 pr-3 py-1 transition-colors hover:bg-accent">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="gradient-brand text-xs font-bold text-white">
-                        {hydrated ? settings.teacherName.slice(0, 2).toUpperCase() : "PR"}
+                        {hydrated ? (settings?.teacherName || "").slice(0, 2).toUpperCase() : "PR"}
                       </AvatarFallback>
                     </Avatar>
                     <span className="hidden text-sm font-medium md:inline">
-                      {hydrated ? settings.teacherName.split(" ")[0] : "Prof."}
+                      {hydrated ? (settings?.teacherName || "").split(" ")[0] : "Prof."}
                     </span>
                   </button>
                 </DropdownMenuTrigger>

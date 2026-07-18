@@ -21,7 +21,7 @@ export function studentFeeStatus(student: Student, fees: FeePayment[]) {
   monthsSet.add(currentMonthKey());
   const activeMonths = Array.from(monthsSet);
 
-  const joiningMonth = student.joiningDate.slice(0, 7);
+  const joiningMonth = (student.joiningDate || "").slice(0, 7);
   const studentMonths = activeMonths.filter((m) => m >= joiningMonth);
 
   let pending = 0;

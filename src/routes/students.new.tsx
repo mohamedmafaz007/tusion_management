@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useStudents, useSettings } from "@/lib/hooks";
+import { useStudents, useSettings, useHydrated } from "@/lib/hooks";
 import { uid } from "@/lib/storage";
 import { STANDARDS } from "@/lib/types";
 import { toast } from "sonner";
@@ -73,6 +73,7 @@ const DEFAULTS: FormValues = {
 };
 
 function NewStudentPage() {
+  const hydrated = useHydrated();
   const [photo, setPhoto] = useState<string | undefined>();
   const fileRef = useRef<HTMLInputElement>(null);
   const [students, setStudentsState] = useStudents();
@@ -204,6 +205,10 @@ function NewStudentPage() {
 
   const gender = watch("gender");
   const standard = watch("standard");
+
+  if (!hydrated) {
+    return <div className="p-6 text-muted-foreground">Loading registration form...</div>;
+  }
 
   return (
     <div className="space-y-6">

@@ -60,12 +60,16 @@ function DashboardPage() {
   const [fees] = useFees();
 
   const availableMonths = useMemo(() => {
+    const MONTH_NAMES = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
     const months = [];
     const now = new Date();
     for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const label = d.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+      const label = `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
       months.push({ value: val, label });
     }
     return months;
@@ -172,7 +176,7 @@ function DashboardPage() {
     const collected = monthFees.reduce((s, f) => s + f.paidAmount, 0);
 
     const unpaidStudents = students.filter(
-      (s) => s.joiningDate.slice(0, 7) <= cm && !fees.some((f) => f.studentId === s.id && f.month === cm)
+      (s) => (s.joiningDate || "").slice(0, 7) <= cm && !fees.some((f) => f.studentId === s.id && f.month === cm)
     );
     const pending = monthFees.reduce((s, f) => s + (f.amount - f.paidAmount), 0) +
       unpaidStudents.reduce((s, st) => s + st.monthlyFees, 0);

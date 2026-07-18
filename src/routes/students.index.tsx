@@ -137,6 +137,10 @@ function StudentsPage() {
     q && { label: `Search: ${q}`, clear: () => setQ("") },
   ].filter(Boolean) as { label: string; clear: () => void }[];
 
+  if (!hydrated) {
+    return <div className="p-6 text-muted-foreground">Loading students workspace...</div>;
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader

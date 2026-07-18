@@ -199,6 +199,10 @@ function AttendancePage() {
     };
   }, [todayRecords, filtered]);
 
+  if (!hydrated) {
+    return <div className="p-6 text-muted-foreground">Loading attendance workspace...</div>;
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader

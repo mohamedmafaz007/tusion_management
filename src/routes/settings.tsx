@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useSettings } from "@/lib/hooks";
+import { useHydrated, useSettings } from "@/lib/hooks";
 import { DEFAULT_SETTINGS } from "@/lib/storage";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,7 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsPage() {
+  const hydrated = useHydrated();
   const [settings, setSettingsState] = useSettings();
   const [draft, setDraft] = useState(settings);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -137,6 +138,10 @@ function SettingsPage() {
     r.onload = () => setDraft({ ...draft, logo: r.result as string });
     r.readAsDataURL(file);
   };
+
+  if (!hydrated) {
+    return <div className="p-6 text-muted-foreground">Loading settings...</div>;
+  }
 
   return (
     <div className="space-y-6">

@@ -47,7 +47,7 @@ export const Route = createFileRoute("/fees")({
 });
 
 function FeesPage() {
-  useHydrated();
+  const hydrated = useHydrated();
   const [students] = useStudents();
   const [fees, setFeesState] = useFees();
   const [settings] = useSettings();
@@ -67,7 +67,7 @@ function FeesPage() {
   const rows = useMemo(() => {
     return students
       .filter((s) => (standard === "all" || s.standard === standard) && (!q || s.name.toLowerCase().includes(q.toLowerCase())))
-      .filter((s) => s.joiningDate.slice(0, 7) <= month || fees.some((f) => f.studentId === s.id && f.month === month))
+      .filter((s) => (s.joiningDate || "").slice(0, 7) <= month || fees.some((f) => f.studentId === s.id && f.month === month))
       .map((s) => {
         const fee =
           fees.find((f) => f.studentId === s.id && f.month === month) ??
@@ -162,6 +162,10 @@ function FeesPage() {
     const f = fees.find((ff) => ff.id === receiptOf.feeId);
     return s && f ? { s, f } : null;
   }, [receiptOf, students, fees]);
+
+  if (!hydrated) {
+    return <div className="p-6 text-muted-foreground">Loading fees workspace...</div>;
+  }
 
   return (
     <div className="space-y-6">
