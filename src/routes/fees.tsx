@@ -67,6 +67,7 @@ function FeesPage() {
   const rows = useMemo(() => {
     return students
       .filter((s) => (standard === "all" || s.standard === standard) && (!q || s.name.toLowerCase().includes(q.toLowerCase())))
+      .filter((s) => s.joiningDate.slice(0, 7) <= month || fees.some((f) => f.studentId === s.id && f.month === month))
       .map((s) => {
         const fee =
           fees.find((f) => f.studentId === s.id && f.month === month) ??
@@ -83,13 +84,14 @@ function FeesPage() {
   }, [students, fees, q, month, standard]);
 
   const totals = useMemo(() => {
-    const monthFees = fees.filter((f) => f.month === month);
-    const total = monthFees.reduce((s, f) => s + f.amount, 0) + students
-      .filter((s) => !fees.some((f) => f.studentId === s.id && f.month === month))
-      .reduce((s, st) => s + st.monthlyFees, 0);
-    const paid = monthFees.reduce((s, f) => s + f.paidAmount, 0);
+    let total = 0;
+    let paid = 0;
+    for (const r of rows) {
+      total += r.fee.amount;
+      paid += r.fee.paidAmount;
+    }
     return { total, paid, pending: total - paid };
-  }, [fees, students, month]);
+  }, [rows]);
 
   const [isSendingReceipt, setIsSendingReceipt] = useState(false);
 

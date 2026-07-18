@@ -74,7 +74,7 @@ function StudentProfilePage() {
   }
 
   const attn = studentAttendancePct(student.id, attendance);
-  const fs = studentFeeStatus(student.id, fees);
+  const fs = studentFeeStatus(student, fees);
 
   const save = () => {
     if (!draft) return;

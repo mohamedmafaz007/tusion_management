@@ -167,16 +167,22 @@ function DashboardPage() {
     const absent = todayRecs.filter((r) => r.status === "Absent").length;
 
     const cm = currentMonthKey();
-    const monthFees = fees.filter((f) => f.month === cm);
+    const activeStudentIds = new Set(students.map((s) => s.id));
+    const monthFees = fees.filter((f) => f.month === cm && activeStudentIds.has(f.studentId));
     const collected = monthFees.reduce((s, f) => s + f.paidAmount, 0);
-    const pending = monthFees.reduce((s, f) => s + (f.amount - f.paidAmount), 0);
+
+    const unpaidStudents = students.filter(
+      (s) => s.joiningDate.slice(0, 7) <= cm && !fees.some((f) => f.studentId === s.id && f.month === cm)
+    );
+    const pending = monthFees.reduce((s, f) => s + (f.amount - f.paidAmount), 0) +
+      unpaidStudents.reduce((s, st) => s + st.monthlyFees, 0);
 
     const total = attendance.length;
     const presentAll = attendance.filter((r) => r.status === "Present" || r.status === "Late").length;
     const attPct = total ? Math.round((presentAll / total) * 100) : 0;
 
     return { present, absent, collected, pending, attPct };
-  }, [attendance, fees]);
+  }, [attendance, fees, students]);
 
   const stdCounts = useMemo(
     () =>

@@ -14,7 +14,7 @@ import {
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { useHydrated, useMaterials } from "@/lib/hooks";
+import { useHydrated, useMaterials, useSettings } from "@/lib/hooks";
 import { uid } from "@/lib/storage";
 import { MATERIAL_TYPES, STANDARDS, type MaterialType, type Standard } from "@/lib/types";
 import { toast } from "sonner";
@@ -81,7 +81,15 @@ function extractDriveFileId(url: string): string | null {
 function MaterialsPage() {
   const hydrated = useHydrated();
   const [materials, setMaterialsState] = useMaterials();
+  const [settings] = useSettings();
+  const standardsList = useMemo(() => settings?.standards || STANDARDS, [settings]);
   const [standard, setStandard] = useState<Standard>("6th");
+
+  useEffect(() => {
+    if (standardsList.length > 0 && !standardsList.includes(standard)) {
+      setStandard(standardsList[0]);
+    }
+  }, [standardsList, standard]);
   const [type, setType] = useState<string>("all");
   const [q, setQ] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -352,7 +360,7 @@ function MaterialsPage() {
 
       {/* Standard folders */}
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
-        {STANDARDS.map((s) => {
+        {standardsList.map((s) => {
           const active = standard === s;
           return (
             <button

@@ -15,10 +15,36 @@ export function studentAttendancePct(studentId: string, records: AttendanceRecor
   return Math.round((present / uniqueRecords.length) * 100);
 }
 
-export function studentFeeStatus(studentId: string, fees: FeePayment[]) {
-  const rs = fees.filter((f) => f.studentId === studentId);
-  const pending = rs.reduce((s, f) => s + (f.amount - f.paidAmount), 0);
-  const paid = rs.reduce((s, f) => s + f.paidAmount, 0);
+export function studentFeeStatus(student: Student, fees: FeePayment[]) {
+  const monthsSet = new Set<string>();
+  fees.forEach((f) => monthsSet.add(f.month));
+  monthsSet.add(currentMonthKey());
+  const activeMonths = Array.from(monthsSet);
+
+  const joiningMonth = student.joiningDate.slice(0, 7);
+  const studentMonths = activeMonths.filter((m) => m >= joiningMonth);
+
+  let pending = 0;
+  let paid = 0;
+
+  for (const month of studentMonths) {
+    const f = fees.find((fee) => fee.studentId === student.id && fee.month === month);
+    if (f) {
+      pending += f.amount - f.paidAmount;
+      paid += f.paidAmount;
+    } else {
+      pending += student.monthlyFees;
+    }
+  }
+
+  // Also account for any other fees in the database (e.g. historical fees)
+  // in case they are outside the computed studentMonths
+  const otherFees = fees.filter((f) => f.studentId === student.id && !studentMonths.includes(f.month));
+  for (const f of otherFees) {
+    pending += f.amount - f.paidAmount;
+    paid += f.paidAmount;
+  }
+
   return { pending, paid, hasPending: pending > 0 };
 }
 

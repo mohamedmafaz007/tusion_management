@@ -90,7 +90,7 @@ function StudentsPage() {
         s.fatherMobile.includes(q);
       const matchStd = standard === "all" || s.standard === standard;
       const matchSch = school === "all" || s.school === school;
-      const fs = studentFeeStatus(s.id, fees);
+      const fs = studentFeeStatus(s, fees);
       const matchFee =
         feeStatus === "all" ||
         (feeStatus === "paid" && !fs.hasPending) ||
@@ -252,7 +252,7 @@ function StudentsPage() {
                 </TableRow>
               )}
               {paged.map((s) => {
-                const fs = studentFeeStatus(s.id, fees);
+                const fs = studentFeeStatus(s, fees);
                 const attn = studentAttendancePct(s.id, attendance);
                 return (
                   <TableRow key={s.id} className="group transition-colors hover:bg-accent/40">
