@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { sendWhatsAppAlert, getRegistrationPdf } from "@/lib/db";
 
 const schema = z.object({
+  registrationNo: z.string().trim().min(1, "Registration number is required").max(50),
   name: z.string().trim().min(2, "Name is required").max(100),
   gender: z.enum(["Male", "Female", "Other"]),
   dob: z.string().min(1, "Date of birth is required"),
@@ -54,6 +55,7 @@ export const Route = createFileRoute("/students/new")({
 });
 
 const DEFAULTS: FormValues = {
+  registrationNo: "",
   name: "",
   gender: "Male",
   dob: "",
@@ -98,13 +100,28 @@ function NewStudentPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const onSubmit = async (data: FormValues) => {
+    const normalizedRegNo = data.registrationNo.trim();
+    const isDuplicate = students.some(
+      (s) => s.registrationNo.trim().toLowerCase() === normalizedRegNo.toLowerCase()
+    );
+    if (isDuplicate) {
+      toast.error(`Registration number "${normalizedRegNo}" is already in use.`);
+      return;
+    }
+
     setIsSaving(true);
     try {
       const studentId = uid();
-      const registrationNo = `VTC-${studentId.slice(0, 6).toUpperCase()}`;
       await setStudentsState([
         ...students,
-        { ...data, id: studentId, registrationNo, photo, createdAt: new Date().toISOString() },
+        {
+          ...data,
+          id: studentId,
+          registrationNo: normalizedRegNo,
+          photo,
+          address: data.address || "",
+          createdAt: new Date().toISOString()
+        },
       ]);
       toast.success(`${data.name} registered successfully!`);
 
@@ -228,6 +245,9 @@ function NewStudentPage() {
         {/* Details */}
         <div className="glass space-y-5 rounded-2xl p-6">
           <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Registration Number" error={errors.registrationNo?.message}>
+              <Input {...register("registrationNo")} placeholder="e.g. VTC-001" />
+            </Field>
             <Field label="Student Name" error={errors.name?.message}>
               <Input {...register("name")} placeholder="Full name" />
             </Field>

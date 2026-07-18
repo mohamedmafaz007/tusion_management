@@ -85,6 +85,7 @@ function StudentsPage() {
       const matchQ =
         !q ||
         s.name.toLowerCase().includes(q.toLowerCase()) ||
+        (s.registrationNo || "").toLowerCase().includes(q.toLowerCase()) ||
         s.parentName.toLowerCase().includes(q.toLowerCase()) ||
         s.fatherMobile.includes(q);
       const matchStd = standard === "all" || s.standard === standard;

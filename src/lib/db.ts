@@ -169,7 +169,7 @@ export const getDbStudents = createServerFn({ method: "GET" })
     if (!sql) return [] as Student[];
     try {
       const rows = await sql`SELECT * FROM students`;
-      return rows.map(r => ({
+      return rows.map((r: any) => ({
         id: r.id as string,
         registrationNo: (r.registrationNo as string) || `VTC-${(r.id as string).slice(0, 6).toUpperCase()}`,
         photo: r.photo as string | undefined,
@@ -253,7 +253,7 @@ export const getDbAttendance = createServerFn({ method: "GET" })
     if (!sql) return [] as AttendanceRecord[];
     try {
       const rows = await sql`SELECT * FROM attendance`;
-      return rows.map(r => ({
+      return rows.map((r: any) => ({
         id: r.id as string,
         studentId: r.studentId as string,
         date: r.date as string,
@@ -311,7 +311,7 @@ export const getDbFees = createServerFn({ method: "GET" })
     if (!sql) return [] as FeePayment[];
     try {
       const rows = await sql`SELECT * FROM fees`;
-      return rows.map(r => ({
+      return rows.map((r: any) => ({
         id: r.id as string,
         studentId: r.studentId as string,
         month: r.month as string,
@@ -373,7 +373,7 @@ export const getDbMaterials = createServerFn({ method: "GET" })
     if (!sql) return [] as Material[];
     try {
       const rows = await sql`SELECT * FROM materials`;
-      return rows.map(r => ({
+      return rows.map((r: any) => ({
         id: r.id as string,
         standard: r.standard as any,
         type: r.type as any,
@@ -1313,8 +1313,7 @@ const FESTIVALS: Record<string, { name: string; wish: string }> = {
   "2028-02-23": { name: "Maha Shivaratri", wish: "Wishing you a blessed Maha Shivaratri. May Lord Shiva bless you with peace and wisdom. 🔱" },
   "2028-02-26": { name: "Eid al-Fitr", wish: "Eid Mubarak! Wishing you and your family a blessed day filled with joy and happiness. 🌙" },
   "2028-03-11": { name: "Holi", wish: "Happy Holi! May your life be filled with vibrant colors of happiness, love, and laughter. 🎨" },
-  "2028-04-14": { name: "Tamil New Year / Puthandu", wish: "Iniya Puthandu Vazhthukkal! May this Tamil New Year bring health, prosperity, and happiness. 🍊🎉" },
-  "2028-04-14": { name: "Good Friday", wish: "Have a blessed Good Friday. May the love and grace of God shine upon you today and always. 🕯️" },
+  "2028-04-14": { name: "Tamil New Year / Puthandu & Good Friday", wish: "Iniya Puthandu Vazhthukkal and a blessed Good Friday! May this day bring health, peace, prosperity, and blessings to you. 🍊🎉🕯️" },
   "2028-05-05": { name: "Eid al-Adha", wish: "Eid al-Adha Mubarak! May your faith and devotion be rewarded with happiness, peace, and blessings. 🌙" },
   "2028-08-13": { name: "Krishna Janmashtami", wish: "Happy Janmashtami! May Lord Krishna steal all your worries and bless you with happiness and love. 🍯" },
   "2028-08-15": { name: "Independence Day", wish: "Happy Independence Day! Let us celebrate the freedom and unity of our great nation. 🇮🇳" },

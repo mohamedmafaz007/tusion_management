@@ -110,7 +110,8 @@ export type MessageType =
   | "fee_reminder"
   | "fee_receipt"
   | "birthday"
-  | "fee_overdue";
+  | "fee_overdue"
+  | "campaign";
 
 export interface MessageLog {
   id: string;

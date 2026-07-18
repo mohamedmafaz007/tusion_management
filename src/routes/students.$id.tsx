@@ -79,8 +79,22 @@ function StudentProfilePage() {
   const save = () => {
     if (!draft) return;
 
+    if (!draft.registrationNo?.trim()) {
+      toast.error("Registration number is required");
+      return;
+    }
+
     if (!draft.name.trim()) {
       toast.error("Name is required");
+      return;
+    }
+
+    const regNoClean = draft.registrationNo.trim();
+    const isDuplicate = students.some(
+      (s) => s.id !== id && s.registrationNo.trim().toLowerCase() === regNoClean.toLowerCase()
+    );
+    if (isDuplicate) {
+      toast.error(`Registration number "${regNoClean}" is already in use by another student.`);
       return;
     }
 
@@ -105,6 +119,7 @@ function StudentProfilePage() {
 
     const updatedStudent = {
       ...draft,
+      registrationNo: regNoClean,
       fatherMobile: fatherClean,
       motherMobile: motherClean,
       address: draft.address?.trim() || "",
@@ -226,6 +241,7 @@ function StudentProfilePage() {
           <div className="min-w-0 pt-4">
             <h2 className="truncate text-2xl font-bold">{student.name}</h2>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <Badge variant="outline" className="border-primary/50 text-primary font-semibold">{student.registrationNo}</Badge>
               <Badge variant="secondary">{student.standard} - {student.section}</Badge>
               <span className="inline-flex items-center gap-1"><SchoolIcon className="h-3.5 w-3.5" /> {student.school}</span>
               <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> Joined {student.joiningDate}</span>
@@ -273,6 +289,7 @@ function StudentProfilePage() {
         <div className="glass rounded-2xl p-6">
           <h3 className="mb-4 font-semibold">Edit Details</h3>
           <div className="grid gap-4 md:grid-cols-2">
+            <Fld label="Registration No"><Input value={draft.registrationNo} onChange={(e) => setDraft({ ...draft, registrationNo: e.target.value })} /></Fld>
             <Fld label="Name"><Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></Fld>
             <Fld label="School"><Input value={draft.school} onChange={(e) => setDraft({ ...draft, school: e.target.value })} /></Fld>
             <Fld label="Section"><Input value={draft.section} onChange={(e) => setDraft({ ...draft, section: e.target.value })} /></Fld>

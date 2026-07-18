@@ -59,6 +59,7 @@ const TYPE_LABELS: Record<MessageType, { label: string; color: string }> = {
   fee_receipt: { label: "Fee Receipt", color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20" },
   birthday: { label: "Birthday Wish", color: "bg-pink-500/10 text-pink-500 border-pink-500/20" },
   fee_overdue: { label: "Fee Overdue", color: "bg-red-500/10 text-red-500 border-red-500/20" },
+  campaign: { label: "Campaign / Bulk", color: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
 };
 
 function MessageLogsPage() {
