@@ -91,6 +91,7 @@ function MaterialsPage() {
     }
   }, [standardsList, standard]);
   const [type, setType] = useState<string>("all");
+  const [mediumFilter, setMediumFilter] = useState<string>("all");
   const [q, setQ] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
   const [previewMaterial, setPreviewMaterial] = useState<typeof materials[0] | null>(null);
@@ -122,9 +123,10 @@ function MaterialsPage() {
   };
 
   const fileRef = useRef<HTMLInputElement>(null);
-  const [form, setForm] = useState<{ title: string; type: MaterialType; file: File | null }>({
+  const [form, setForm] = useState<{ title: string; type: MaterialType; medium: "Tamil" | "English"; file: File | null }>({
     title: "",
     type: "Notes",
+    medium: "English",
     file: null,
   });
 
@@ -133,11 +135,12 @@ function MaterialsPage() {
       materials
         .filter((m) => m.standard === standard)
         .filter((m) => type === "all" || m.type === type)
+        .filter((m) => mediumFilter === "all" || (m.medium || "English") === mediumFilter)
         .filter((m) => !q || m.title.toLowerCase().includes(q.toLowerCase()) || m.fileName.toLowerCase().includes(q.toLowerCase())),
-    [materials, standard, type, q],
+    [materials, standard, type, mediumFilter, q],
   );
 
-  const countByStd = (s: Standard) => materials.filter((m) => m.standard === s).length;
+  const countByStd = (s: Standard) => materials.filter((m) => m.standard === s && (mediumFilter === "all" || (m.medium || "English") === mediumFilter)).length;
 
   const handleUpload = async () => {
     let scriptUrl = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
@@ -197,12 +200,13 @@ function MaterialsPage() {
             size: 0,
             driveUrl: result.link!,
             driveFileId: result.id!,
+            medium: form.medium,
             createdAt: new Date().toISOString(),
           },
         ]);
         toast.success("Google Drive material linked");
         setUploadOpen(false);
-        setForm({ title: "", type: "Notes", file: null });
+        setForm({ title: "", type: "Notes", medium: "English", file: null });
         setDriveUrl("");
       } catch (err: any) {
         console.error("Linking failed:", err);
@@ -260,12 +264,13 @@ function MaterialsPage() {
               size: file.size,
               driveUrl: result.link!,
               driveFileId: result.id!,
+              medium: form.medium,
               createdAt: new Date().toISOString(),
             },
           ]);
           toast.success("File uploaded directly to Google Drive!");
           setUploadOpen(false);
-          setForm({ title: "", type: "Notes", file: null });
+          setForm({ title: "", type: "Notes", medium: "English", file: null });
         } catch (err: any) {
           console.error("Direct upload failed:", err);
           toast.error(err.message || "Failed to upload to Google Drive");
@@ -387,10 +392,18 @@ function MaterialsPage() {
           <Input placeholder="Search materials…" value={q} onChange={(e) => setQ(e.target.value)} className="h-10 rounded-xl pl-9" />
         </div>
         <Select value={type} onValueChange={setType}>
-          <SelectTrigger className="h-10 w-[200px] rounded-xl"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-10 w-[180px] rounded-xl"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
             {MATERIAL_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={mediumFilter} onValueChange={setMediumFilter}>
+          <SelectTrigger className="h-10 w-[160px] rounded-xl"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Mediums</SelectItem>
+            <SelectItem value="Tamil">Tamil Medium</SelectItem>
+            <SelectItem value="English">English Medium</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -417,11 +430,21 @@ function MaterialsPage() {
                     {extIcon(m.fileType)}
                   </div>
                 )}
-                {m.driveFileId ? (
-                  <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 text-[10px] font-bold uppercase">Google Drive</span>
-                ) : (
-                  <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase">{m.fileType || "file"}</span>
-                )}
+                <div className="flex flex-col items-end gap-1">
+                  {m.driveFileId ? (
+                    <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 text-[10px] font-bold uppercase">Google Drive</span>
+                  ) : (
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase">{m.fileType || "file"}</span>
+                  )}
+                  <span className={cn(
+                    "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
+                    (m.medium || "English") === "Tamil"
+                      ? "bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400"
+                      : "bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400"
+                  )}>
+                    {m.medium || "English"}
+                  </span>
+                </div>
               </div>
               <div className="min-w-0">
                 <div className="truncate font-semibold">{m.title}</div>
@@ -489,6 +512,16 @@ function MaterialsPage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {MATERIAL_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Medium of Study</Label>
+              <Select value={form.medium} onValueChange={(v) => setForm({ ...form, medium: v as any })} disabled={isUploading}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="English">English</SelectItem>
+                  <SelectItem value="Tamil">Tamil</SelectItem>
                 </SelectContent>
               </Select>
             </div>

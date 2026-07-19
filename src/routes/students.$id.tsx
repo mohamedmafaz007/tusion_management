@@ -15,6 +15,13 @@ import { formatCurrency, initials, studentAttendancePct, studentAvatarStyle, stu
 import { toast } from "sonner";
 import { uid } from "@/lib/storage";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -123,6 +130,8 @@ function StudentProfilePage() {
       fatherMobile: fatherClean,
       motherMobile: motherClean,
       address: draft.address?.trim() || "",
+      boardOfStudy: draft.boardOfStudy || "State Board",
+      mediumOfStudy: draft.mediumOfStudy || "English",
     };
 
     setStudentsState(students.map((s) => (s.id === id ? updatedStudent : s)));
@@ -243,6 +252,8 @@ function StudentProfilePage() {
             <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <Badge variant="outline" className="border-primary/50 text-primary font-semibold">{student.registrationNo}</Badge>
               <Badge variant="secondary">{student.standard} - {student.section}</Badge>
+              <Badge variant="outline" className="border-amber-500/50 text-amber-600 font-semibold">{student.boardOfStudy || "State Board"}</Badge>
+              <Badge variant="outline" className="border-blue-500/50 text-blue-600 font-semibold">{(student.mediumOfStudy || "English") + " Medium"}</Badge>
               <span className="inline-flex items-center gap-1"><SchoolIcon className="h-3.5 w-3.5" /> {student.school}</span>
               <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> Joined {student.joiningDate}</span>
             </div>
@@ -293,6 +304,27 @@ function StudentProfilePage() {
             <Fld label="Name"><Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></Fld>
             <Fld label="School"><Input value={draft.school} onChange={(e) => setDraft({ ...draft, school: e.target.value })} /></Fld>
             <Fld label="Section"><Input value={draft.section} onChange={(e) => setDraft({ ...draft, section: e.target.value })} /></Fld>
+            <Fld label="Board of Study">
+              <Select value={draft.boardOfStudy || "State Board"} onValueChange={(v) => setDraft({ ...draft, boardOfStudy: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="State Board">State Board</SelectItem>
+                  <SelectItem value="CBSE">CBSE</SelectItem>
+                  <SelectItem value="ICSE">ICSE</SelectItem>
+                  <SelectItem value="Matriculation">Matriculation</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </Fld>
+            <Fld label="Medium of Study">
+              <Select value={draft.mediumOfStudy || "English"} onValueChange={(v) => setDraft({ ...draft, mediumOfStudy: v as any })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Tamil">Tamil</SelectItem>
+                  <SelectItem value="English">English</SelectItem>
+                </SelectContent>
+              </Select>
+            </Fld>
             <Fld label="Parent Name"><Input value={draft.parentName} onChange={(e) => setDraft({ ...draft, parentName: e.target.value })} /></Fld>
             <Fld label="Father Mobile"><Input value={draft.fatherMobile} onChange={(e) => setDraft({ ...draft, fatherMobile: e.target.value })} /></Fld>
             <Fld label="Mother Mobile"><Input value={draft.motherMobile} onChange={(e) => setDraft({ ...draft, motherMobile: e.target.value })} /></Fld>

@@ -20,6 +20,8 @@ export interface Student {
   joiningDate: string;
   monthlyFees: number;
   admissionFees: number;
+  boardOfStudy?: string;
+  mediumOfStudy?: "Tamil" | "English";
   notes?: string;
   createdAt: string;
 }
@@ -76,6 +78,7 @@ export interface Material {
   dataUrl?: string; // base64 (small files only)
   driveUrl?: string; // Google Drive shareable link
   driveFileId?: string; // Google Drive file ID
+  medium?: "Tamil" | "English";
   createdAt: string;
 }
 

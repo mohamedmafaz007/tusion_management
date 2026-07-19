@@ -100,7 +100,21 @@ export function seedIfNeeded() {
         size: 125430,
         driveUrl: "https://drive.google.com/file/d/1UMwKbEB28d3VBEXgDLhpypnsseufSenG/view",
         driveFileId: "1UMwKbEB28d3VBEXgDLhpypnsseufSenG",
+        medium: "English",
         createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+      },
+      {
+        id: uid(),
+        standard: "6th",
+        type: "Notes",
+        title: "அறிவியல் பாடம் 1: காந்தவியல்",
+        fileName: "tamil_science_magnetism.pdf",
+        fileType: "pdf",
+        size: 112000,
+        driveUrl: "https://drive.google.com/file/d/1UMwKbEB28d3VBEXgDLhpypnsseufSenG/view",
+        driveFileId: "1UMwKbEB28d3VBEXgDLhpypnsseufSenG",
+        medium: "Tamil",
+        createdAt: new Date(Date.now() - 1 * 86400000).toISOString(),
       },
       {
         id: uid(),
@@ -112,6 +126,7 @@ export function seedIfNeeded() {
         size: 98450,
         driveUrl: "https://drive.google.com/file/d/1UMwKbEB28d3VBEXgDLhpypnsseufSenG/view",
         driveFileId: "1UMwKbEB28d3VBEXgDLhpypnsseufSenG",
+        medium: "English",
         createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
       },
       {
@@ -124,6 +139,7 @@ export function seedIfNeeded() {
         size: 204500,
         driveUrl: "https://drive.google.com/file/d/1UMwKbEB28d3VBEXgDLhpypnsseufSenG/view",
         driveFileId: "1UMwKbEB28d3VBEXgDLhpypnsseufSenG",
+        medium: "English",
         createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
       },
       {
@@ -136,6 +152,7 @@ export function seedIfNeeded() {
         size: 76500,
         driveUrl: "https://drive.google.com/file/d/1UMwKbEB28d3VBEXgDLhpypnsseufSenG/view",
         driveFileId: "1UMwKbEB28d3VBEXgDLhpypnsseufSenG",
+        medium: "English",
         createdAt: new Date(Date.now() - 1 * 86400000).toISOString(),
       },
       {
@@ -148,6 +165,7 @@ export function seedIfNeeded() {
         size: 312000,
         driveUrl: "https://drive.google.com/file/d/1UMwKbEB28d3VBEXgDLhpypnsseufSenG/view",
         driveFileId: "1UMwKbEB28d3VBEXgDLhpypnsseufSenG",
+        medium: "English",
         createdAt: new Date(Date.now() - 4 * 86400000).toISOString(),
       }
     ];
@@ -175,6 +193,8 @@ export function seedIfNeeded() {
       joiningDate: `2024-0${(i % 9) + 1}-15`,
       monthlyFees: 1500 + (i % 5) * 500,
       admissionFees: 2000,
+      boardOfStudy: i % 3 === 0 ? "CBSE" : i % 3 === 1 ? "ICSE" : "State Board",
+      mediumOfStudy: i % 2 === 0 ? "English" : "Tamil",
       notes: "",
       createdAt: new Date(Date.now() - i * 86400000).toISOString(),
     };

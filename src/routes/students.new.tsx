@@ -37,6 +37,8 @@ const schema = z.object({
   joiningDate: z.string().min(1, "Joining date is required"),
   monthlyFees: z.coerce.number().min(0).max(1000000),
   admissionFees: z.coerce.number().min(0).max(1000000),
+  boardOfStudy: z.string().min(1, "Board of study is required"),
+  mediumOfStudy: z.enum(["Tamil", "English"]),
   notes: z.string().max(500).optional(),
 }).refine((data) => data.fatherMobile || data.motherMobile, {
   message: "At least one parent mobile number is required",
@@ -69,6 +71,8 @@ const DEFAULTS: FormValues = {
   joiningDate: new Date().toISOString().slice(0, 10),
   monthlyFees: 1500,
   admissionFees: 2000,
+  boardOfStudy: "State Board",
+  mediumOfStudy: "English",
   notes: "",
 };
 
@@ -205,6 +209,8 @@ function NewStudentPage() {
 
   const gender = watch("gender");
   const standard = watch("standard");
+  const boardOfStudy = watch("boardOfStudy");
+  const mediumOfStudy = watch("mediumOfStudy");
 
   if (!hydrated) {
     return <div className="p-6 text-muted-foreground">Loading registration form...</div>;
@@ -284,6 +290,27 @@ function NewStudentPage() {
             </Field>
             <Field label="Section" error={errors.section?.message}>
               <Input {...register("section")} placeholder="A / B / C" />
+            </Field>
+            <Field label="Board of Study" error={errors.boardOfStudy?.message}>
+              <Select value={boardOfStudy} onValueChange={(v) => setValue("boardOfStudy", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="State Board">State Board</SelectItem>
+                  <SelectItem value="CBSE">CBSE</SelectItem>
+                  <SelectItem value="ICSE">ICSE</SelectItem>
+                  <SelectItem value="Matriculation">Matriculation</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Medium of Study" error={errors.mediumOfStudy?.message}>
+              <Select value={mediumOfStudy} onValueChange={(v) => setValue("mediumOfStudy", v as any)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Tamil">Tamil</SelectItem>
+                  <SelectItem value="English">English</SelectItem>
+                </SelectContent>
+              </Select>
             </Field>
             <Field label="Parent Name" error={errors.parentName?.message}>
               <Input {...register("parentName")} placeholder="Parent full name" />

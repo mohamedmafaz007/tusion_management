@@ -70,6 +70,8 @@ export async function initDb() {
         "joiningDate" TEXT NOT NULL,
         "monthlyFees" INTEGER NOT NULL,
         "admissionFees" INTEGER NOT NULL,
+        "boardOfStudy" TEXT,
+        "mediumOfStudy" TEXT,
         "notes" TEXT,
         "createdAt" TEXT NOT NULL
       )
@@ -77,8 +79,10 @@ export async function initDb() {
 
     try {
       await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS "registrationNo" TEXT`;
+      await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS "boardOfStudy" TEXT`;
+      await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS "mediumOfStudy" TEXT`;
     } catch (e) {
-      console.warn("Failed to add registrationNo column (it might already exist):", e);
+      console.warn("Failed to add registrationNo/boardOfStudy/mediumOfStudy columns (they might already exist):", e);
     }
 
     // 2. Attendance table
@@ -117,9 +121,16 @@ export async function initDb() {
         "size" INTEGER NOT NULL,
         "driveUrl" TEXT NOT NULL,
         "driveFileId" TEXT NOT NULL,
+        "medium" TEXT NOT NULL DEFAULT 'English',
         "createdAt" TEXT NOT NULL
       )
     `;
+
+    try {
+      await sql`ALTER TABLE materials ADD COLUMN IF NOT EXISTS "medium" TEXT NOT NULL DEFAULT 'English'`;
+    } catch (e) {
+      console.warn("Failed to add medium column to materials:", e);
+    }
 
     // 5. Settings table
     await sql`
@@ -186,6 +197,8 @@ export const getDbStudents = createServerFn({ method: "GET" })
         joiningDate: r.joiningDate as string,
         monthlyFees: Number(r.monthlyFees),
         admissionFees: Number(r.admissionFees),
+        boardOfStudy: r.boardOfStudy as string | undefined,
+        mediumOfStudy: r.mediumOfStudy as any,
         notes: r.notes as string | undefined,
         createdAt: r.createdAt as string
       })) as Student[];
@@ -218,6 +231,8 @@ export const syncDbStudents = createServerFn({ method: "POST" })
       joiningDate: s.joiningDate || "",
       monthlyFees: s.monthlyFees === undefined ? 0 : Number(s.monthlyFees),
       admissionFees: s.admissionFees === undefined ? 0 : Number(s.admissionFees),
+      boardOfStudy: s.boardOfStudy || "State Board",
+      mediumOfStudy: s.mediumOfStudy || "English",
       notes: s.notes === undefined ? null : s.notes,
       createdAt: s.createdAt || new Date().toISOString()
     }));
@@ -236,7 +251,7 @@ export const syncDbStudents = createServerFn({ method: "POST" })
         await sql`DELETE FROM students`;
         if (deduplicated.length > 0) {
           await sql`
-            INSERT INTO students ${(sql as any)(deduplicated, ["id", "registrationNo", "photo", "name", "gender", "dob", "school", "standard", "section", "parentName", "fatherMobile", "motherMobile", "address", "joiningDate", "monthlyFees", "admissionFees", "notes", "createdAt"])}
+            INSERT INTO students ${(sql as any)(deduplicated, ["id", "registrationNo", "photo", "name", "gender", "dob", "school", "standard", "section", "parentName", "fatherMobile", "motherMobile", "address", "joiningDate", "monthlyFees", "admissionFees", "boardOfStudy", "mediumOfStudy", "notes", "createdAt"])}
           `;
         }
       });
@@ -383,6 +398,7 @@ export const getDbMaterials = createServerFn({ method: "GET" })
         size: Number(r.size),
         driveUrl: r.driveUrl as string,
         driveFileId: r.driveFileId as string,
+        medium: (r.medium as any) || "English",
         createdAt: r.createdAt as string
       })) as Material[];
     } catch (e) {
@@ -407,6 +423,7 @@ export const syncDbMaterials = createServerFn({ method: "POST" })
       size: m.size === undefined ? 0 : Number(m.size),
       driveUrl: m.driveUrl === undefined ? "" : m.driveUrl,
       driveFileId: m.driveFileId === undefined ? "" : m.driveFileId,
+      medium: m.medium || "English",
       createdAt: m.createdAt || new Date().toISOString()
     }));
 
@@ -424,7 +441,7 @@ export const syncDbMaterials = createServerFn({ method: "POST" })
         await sql`DELETE FROM materials`;
         if (deduplicated.length > 0) {
           await sql`
-            INSERT INTO materials ${(sql as any)(deduplicated, ["id", "standard", "type", "title", "fileName", "fileType", "size", "driveUrl", "driveFileId", "createdAt"])}
+            INSERT INTO materials ${(sql as any)(deduplicated, ["id", "standard", "type", "title", "fileName", "fileType", "size", "driveUrl", "driveFileId", "medium", "createdAt"])}
           `;
         }
       });
@@ -644,6 +661,8 @@ export const sendWhatsAppAlert = createServerFn({ method: "POST" })
                 joiningDate: student.joiningDate,
                 monthlyFees: Number(student.monthlyFees),
                 admissionFees: Number(student.admissionFees),
+                boardOfStudy: student.boardOfStudy || "State Board",
+                mediumOfStudy: student.mediumOfStudy || "English",
                 notes: student.notes || "",
                 photo: student.photo || ""
               }
@@ -1439,6 +1458,8 @@ export const getRegistrationPdf = createServerFn({ method: "POST" })
         joiningDate: student.joiningDate,
         monthlyFees: Number(student.monthlyFees),
         admissionFees: Number(student.admissionFees),
+        boardOfStudy: student.boardOfStudy || "State Board",
+        mediumOfStudy: student.mediumOfStudy || "English",
         notes: student.notes || "",
         photo: student.photo || ""
       }

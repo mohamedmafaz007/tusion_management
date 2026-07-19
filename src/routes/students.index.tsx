@@ -116,8 +116,8 @@ function StudentsPage() {
 
   const exportCsv = () => {
     const rows = [
-      ["Name", "School", "Standard", "Parent", "Mobile", "Fees"],
-      ...filtered.map((s) => [s.name, s.school, s.standard, s.parentName, s.fatherMobile, String(s.monthlyFees)]),
+      ["Name", "School", "Standard", "Board of Study", "Medium of Study", "Parent", "Mobile", "Fees"],
+      ...filtered.map((s) => [s.name, s.school, s.standard, s.boardOfStudy || "State Board", s.mediumOfStudy || "English", s.parentName, s.fatherMobile, String(s.monthlyFees)]),
     ];
     const csv = rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -275,7 +275,14 @@ function StudentsPage() {
                       </div>
                     </TableCell>
                     <TableCell className="max-w-[180px] truncate">{s.school}</TableCell>
-                    <TableCell><Badge variant="secondary">{s.standard}</Badge></TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <Badge variant="secondary" className="w-fit">{s.standard}</Badge>
+                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                          {s.boardOfStudy || "State Board"} • {s.mediumOfStudy || "English"}
+                        </span>
+                      </div>
+                    </TableCell>
                     <TableCell className="max-w-[160px] truncate">{s.parentName}</TableCell>
                     <TableCell className="font-mono text-xs">{s.fatherMobile}</TableCell>
                     <TableCell>{formatCurrency(s.monthlyFees)}</TableCell>

@@ -363,6 +363,7 @@ export function generateRegistrationPdf(data: {
     standard: string; section: string; parentName: string;
     fatherMobile: string; motherMobile: string; address: string;
     joiningDate: string; monthlyFees: number; admissionFees: number;
+    boardOfStudy?: string; mediumOfStudy?: string;
     notes?: string; photo?: string;
   }
 }): Promise<Buffer> {
@@ -417,6 +418,8 @@ export function generateRegistrationPdf(data: {
       drawField("Date of Birth", data.student.dob);
       drawField("School", data.student.school);
       drawField("Standard", `${data.student.standard} (${data.student.section || "A"})`);
+      drawField("Board of Study", data.student.boardOfStudy || "State Board");
+      drawField("Medium of Study", data.student.mediumOfStudy || "English");
       drawField("Date of Joining", data.student.joiningDate);
 
       currY = Math.max(currY, photoY + photoHeight + 15);
