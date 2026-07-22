@@ -17,6 +17,7 @@ import {
   LogOut,
   MessageSquare,
   Clock,
+  Contact,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ const nav: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/students/new", label: "Registration", icon: UserPlus },
   { to: "/students", label: "Students", icon: Users },
+  { to: "/teachers", label: "Teachers", icon: Contact },
   { to: "/attendance", label: "Attendance", icon: CalendarCheck },
   { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/fees", label: "Fees", icon: Wallet },

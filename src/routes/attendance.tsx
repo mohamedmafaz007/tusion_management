@@ -53,6 +53,7 @@ function AttendancePage() {
   const [date, setDate] = useState<Date>(new Date());
   const [remarks, setRemarks] = useState<Record<string, string>>({});
   const [isSendingAlerts, setIsSendingAlerts] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const dateKey = format(date, "yyyy-MM-dd");
 
@@ -84,15 +85,22 @@ function AttendancePage() {
       setIsSendingAlerts(false);
     }
   };
-  const filtered = useMemo(
-    () => (standard === "all" ? students : students.filter((s) => s.standard === standard)),
-    [students, standard],
-  );
-
   const todayRecords = useMemo(
     () => attendance.filter((r) => r.date === dateKey),
     [attendance, dateKey],
   );
+
+  const filtered = useMemo(() => {
+    const classStudents = standard === "all" ? students : students.filter((s) => s.standard === standard);
+    return classStudents.filter((s) => {
+      const record = todayRecords.find((r) => r.studentId === s.id);
+      const status = record?.status ?? "unmarked";
+      if (statusFilter === "all") return true;
+      if (statusFilter === "unmarked") return status === "unmarked";
+      return status === statusFilter;
+    });
+  }, [students, standard, statusFilter, todayRecords]);
+
   const statusFor = (sid: string): AttendanceStatus | null =>
     todayRecords.find((r) => r.studentId === sid)?.status ?? null;
 
@@ -190,14 +198,15 @@ function AttendancePage() {
   };
 
   const summary = useMemo(() => {
-    const recs = todayRecords.filter((r) => filtered.some((s) => s.id === r.studentId));
+    const classStudents = standard === "all" ? students : students.filter((s) => s.standard === standard);
+    const recs = todayRecords.filter((r) => classStudents.some((s) => s.id === r.studentId));
     return {
       present: recs.filter((r) => r.status === "Present").length,
       absent: recs.filter((r) => r.status === "Absent").length,
       late: recs.filter((r) => r.status === "Late").length,
-      total: filtered.length,
+      total: classStudents.length,
     };
-  }, [todayRecords, filtered]);
+  }, [todayRecords, students, standard]);
 
   if (!hydrated) {
     return <div className="p-6 text-muted-foreground">Loading attendance workspace...</div>;
@@ -262,6 +271,19 @@ function AttendancePage() {
             {STANDARDS.map((s) => (
               <SelectItem key={s} value={s}>{s}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-10 w-[160px] rounded-xl">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="Present">Present</SelectItem>
+            <SelectItem value="Absent">Absent</SelectItem>
+            <SelectItem value="Late">Late</SelectItem>
+            <SelectItem value="unmarked">Unmarked</SelectItem>
           </SelectContent>
         </Select>
 

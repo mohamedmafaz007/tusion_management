@@ -127,3 +127,13 @@ export interface MessageLog {
   error?: string;
   timestamp: string;
 }
+
+export interface Teacher {
+  id: string;
+  name: string;
+  mobileNo: string;
+  address: string;
+  qualification: string;
+  createdAt: string;
+}
+

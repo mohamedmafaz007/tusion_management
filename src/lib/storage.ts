@@ -5,6 +5,7 @@ import type {
   Material,
   Student,
   Standard,
+  Teacher,
 } from "./types";
 
 const KEYS = {
@@ -13,6 +14,7 @@ const KEYS = {
   fees: "tms.fees",
   materials: "tms.materials",
   settings: "tms.settings",
+  teachers: "tms.teachers",
   seeded: "tms.seeded",
 };
 
@@ -51,6 +53,10 @@ export const setFees = (v: FeePayment[]) => write(KEYS.fees, v);
 // Materials
 export const getMaterials = () => read<Material[]>(KEYS.materials, []);
 export const setMaterials = (v: Material[]) => write(KEYS.materials, v);
+
+// Teachers
+export const getTeachers = () => read<Teacher[]>(KEYS.teachers, []);
+export const setTeachers = (v: Teacher[]) => write(KEYS.teachers, v);
 
 // Settings
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -236,6 +242,27 @@ export function seedIfNeeded() {
     });
   }
   setFees(fees);
+
+  // Seed teachers
+  const sampleTeachers: Teacher[] = [
+    {
+      id: uid(),
+      name: "Prof. Anita Sharma",
+      mobileNo: "9876543210",
+      address: "12 MG Road, Bengaluru, IN",
+      qualification: "M.Sc. Mathematics, B.Ed.",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: uid(),
+      name: "Mr. Rajesh Kumar",
+      mobileNo: "9988776655",
+      address: "45 Park Avenue, Bengaluru, IN",
+      qualification: "B.Tech Computer Science",
+      createdAt: new Date().toISOString(),
+    },
+  ];
+  setTeachers(sampleTeachers);
 
   localStorage.setItem(KEYS.seeded, "1");
 }

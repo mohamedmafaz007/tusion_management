@@ -11,6 +11,8 @@ import {
   setMaterials,
   setSettings,
   setStudents,
+  getTeachers,
+  setTeachers,
 } from "./storage";
 import {
   STANDARDS,
@@ -19,6 +21,7 @@ import {
   type FeePayment,
   type Material,
   type Student,
+  type Teacher,
 } from "./types";
 
 import {
@@ -132,3 +135,25 @@ export const useSettings = () => {
 
   return [settings, setSettingsState] as const;
 };
+
+export function useTeachers() {
+  const [state, setState] = useState<Teacher[]>(getTeachers);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (!detail || detail.key?.includes("teachers")) setState(getTeachers());
+    };
+    window.addEventListener("tms:storage", handler);
+    window.addEventListener("storage", () => setState(getTeachers()));
+    return () => window.removeEventListener("tms:storage", handler);
+  }, []);
+
+  const update = (v: Teacher[] | ((p: Teacher[]) => Teacher[])) => {
+    const next = typeof v === "function" ? (v as (p: Teacher[]) => Teacher[])(state) : v;
+    setTeachers(next);
+    setState(next);
+  };
+
+  return [state, update] as const;
+}

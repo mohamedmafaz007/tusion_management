@@ -1416,11 +1416,144 @@ Vishwa Tuition Center`;
 export const loginAdmin = createServerFn({ method: "POST" })
   .validator((password: string) => password)
   .handler(async ({ data: password }) => {
-    const envPassword = process.env.ADMIN_PASSWORD || "vishwa@123";
-    if (password === envPassword) {
+    const sql = await getSql();
+    let configuredPassword = process.env.ADMIN_PASSWORD || "vishwa@123";
+
+    if (sql) {
+      try {
+        const rows = await sql`SELECT "value" FROM settings WHERE "key" = 'admin_password'`;
+        if (rows.length > 0) {
+          configuredPassword = rows[0].value;
+        }
+      } catch (err) {
+        console.error("Failed to fetch admin password from DB settings:", err);
+      }
+    }
+
+    if (password === configuredPassword) {
       return { success: true, token: "vishwa_admin_session_token_123" };
     }
     return { success: false, error: "Incorrect password" };
+  });
+
+export const sendPasswordResetOtp = createServerFn({ method: "POST" })
+  .handler(async () => {
+    const sql = await getSql();
+    if (!sql) {
+      console.warn("Database not configured. Cannot verify OTP.");
+      return { success: false, error: "Database not configured. Cannot use OTP verification." };
+    }
+
+    // 1. Generate 6-digit numeric OTP code
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes from now
+
+    // 2. Save session in DB
+    try {
+      const sessionData = JSON.stringify({ otp, expiresAt });
+      await sql`
+        INSERT INTO settings ("key", "value")
+        VALUES ('reset_otp_session', ${sessionData})
+        ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value"
+      `;
+    } catch (dbErr) {
+      console.error("Failed to store OTP in settings table:", dbErr);
+      return { success: false, error: "Failed to store OTP session" };
+    }
+
+    console.log(`\n==================================================`);
+    console.log(`[OTP Verification] Generated OTP is: ${otp}`);
+    console.log(`==================================================\n`);
+
+    // 3. Dispatch via NodeMailer
+    try {
+      const nodemailer = await import("nodemailer");
+      const user = process.env.SMTP_USER || "vishwatutioncenter@gmail.com";
+      const pass = process.env.SMTP_PASS;
+
+      if (!pass) {
+        console.warn("SMTP_PASS is not configured in .env. Logging OTP to console/terminal instead of sending email.");
+        return { success: true, loggedToConsole: true };
+      }
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user,
+          pass,
+        },
+      });
+
+      const mailOptions = {
+        from: `"Vishwa Tuition Center" <${user}>`,
+        to: "vishwatutioncenter@gmail.com",
+        subject: "Vishwa Tuition Center - Admin Password Reset OTP",
+        text: `Your OTP for resetting the admin login password is: ${otp}\n\nThis OTP is valid for 10 minutes.`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; border: 1px solid #ddd; border-radius: 12px;">
+            <h2 style="color: #4f46e5; border-bottom: 2px solid #f3f4f6; padding-bottom: 10px;">Admin Password Reset</h2>
+            <p>You requested a verification code to reset the administrator login password for Vishwa Tuition Center.</p>
+            <div style="font-size: 24px; font-weight: bold; background: #f3f4f6; padding: 12px 24px; display: inline-block; border-radius: 8px; margin: 15px 0; color: #4f46e5; letter-spacing: 2px;">
+              ${otp}
+            </div>
+            <p>This code is valid for <strong>10 minutes</strong>. If you did not make this request, please ignore this email.</p>
+            <hr style="border: 0; border-top: 1px solid #f3f4f6; margin-top: 30px;" />
+            <p style="font-size: 11px; color: #9ca3af; text-align: center;">This is an automated security email. Please do not reply.</p>
+          </div>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+      return { success: true, emailSent: true };
+    } catch (mailErr: any) {
+      console.error("Nodemailer failed to send email:", mailErr);
+      return { success: true, emailError: mailErr.message || String(mailErr), loggedToConsole: true };
+    }
+  });
+
+export const verifyOtpAndResetPassword = createServerFn({ method: "POST" })
+  .validator((data: { otp: string; newPassword: string }) => data)
+  .handler(async ({ data: { otp, newPassword } }) => {
+    const sql = await getSql();
+    if (!sql) {
+      return { success: false, error: "Database not connected" };
+    }
+
+    try {
+      // 1. Fetch OTP session from DB
+      const rows = await sql`SELECT "value" FROM settings WHERE "key" = 'reset_otp_session'`;
+      if (rows.length === 0) {
+        return { success: false, error: "No active password reset session found. Please request a new OTP." };
+      }
+
+      const { otp: savedOtp, expiresAt } = JSON.parse(rows[0].value);
+
+      // 2. Validate OTP
+      if (Date.now() > expiresAt) {
+        // Clear expired session
+        await sql`DELETE FROM settings WHERE "key" = 'reset_otp_session'`;
+        return { success: false, error: "OTP has expired. Please request a new OTP." };
+      }
+
+      if (otp.trim() !== savedOtp) {
+        return { success: false, error: "Invalid OTP code. Please check and try again." };
+      }
+
+      // 3. Update password in DB
+      await sql`
+        INSERT INTO settings ("key", "value")
+        VALUES ('admin_password', ${newPassword.trim()})
+        ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value"
+      `;
+
+      // 4. Delete the used OTP session
+      await sql`DELETE FROM settings WHERE "key" = 'reset_otp_session'`;
+
+      return { success: true, token: "vishwa_admin_session_token_123" };
+    } catch (err: any) {
+      console.error("Failed to verify OTP or reset password:", err);
+      return { success: false, error: err.message || String(err) };
+    }
   });
 
 export const getRegistrationPdf = createServerFn({ method: "POST" })

@@ -96,6 +96,11 @@ function StudentProfilePage() {
       return;
     }
 
+    if (!draft.joiningDate) {
+      toast.error("Date of joining is required");
+      return;
+    }
+
     const regNoClean = draft.registrationNo.trim();
     const isDuplicate = students.some(
       (s) => s.id !== id && s.registrationNo.trim().toLowerCase() === regNoClean.toLowerCase()
@@ -331,6 +336,7 @@ function StudentProfilePage() {
             <Fld label="Monthly Fee"><Input type="number" value={draft.monthlyFees} onChange={(e) => setDraft({ ...draft, monthlyFees: +e.target.value })} /></Fld>
             <Fld label="Admission Fee"><Input type="number" value={draft.admissionFees} onChange={(e) => setDraft({ ...draft, admissionFees: +e.target.value })} /></Fld>
             <Fld label="Pending Fee"><Input type="number" value={draftPending} onChange={(e) => setDraftPending(+e.target.value)} /></Fld>
+            <Fld label="Date of Joining"><Input type="date" value={draft.joiningDate} onChange={(e) => setDraft({ ...draft, joiningDate: e.target.value })} /></Fld>
             <div className="md:col-span-2"><Fld label="Address"><Textarea rows={2} value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} /></Fld></div>
             <div className="md:col-span-2"><Fld label="Notes"><Textarea rows={2} value={draft.notes ?? ""} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Fld></div>
           </div>

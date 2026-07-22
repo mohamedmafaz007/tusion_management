@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Save, Upload, Sun, Moon, Bell, CheckCircle, Loader2 } from "lucide-react";
+import { Save, Upload, Sun, Moon, Bell, CheckCircle, Loader2, KeyRound } from "lucide-react";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,40 @@ function SettingsPage() {
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [newStandard, setNewStandard] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  // Password States
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isPasswordUpdating, setIsPasswordUpdating] = useState(false);
+
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newPassword.trim();
+    if (!trimmed) {
+      toast.error("Password cannot be empty");
+      return;
+    }
+    if (trimmed.length < 4) {
+      toast.error("Password must be at least 4 characters long");
+      return;
+    }
+    if (trimmed !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setIsPasswordUpdating(true);
+    try {
+      localStorage.setItem("tms.admin_password", trimmed);
+      toast.success("Admin password changed successfully!");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      toast.error(`Failed to update password: ${err.message || err}`);
+    } finally {
+      setIsPasswordUpdating(false);
+    }
+  };
 
   const handleAddStandard = () => {
     const trimmed = newStandard.trim();
@@ -388,6 +422,44 @@ function SettingsPage() {
               </Button>
             )}
           </div>
+        </div>
+
+        {/* Change Password */}
+        <div className="glass rounded-2xl p-6 lg:col-span-2">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="grid h-10 w-10 place-items-center rounded-lg gradient-brand text-white shadow-glow">
+              <KeyRound className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">Change Login Password</h3>
+              <p className="text-xs text-muted-foreground">Update the administrator password used to login to this dashboard.</p>
+            </div>
+          </div>
+          <form onSubmit={handlePasswordChange} className="grid gap-4 md:grid-cols-2">
+            <Fld label="New Admin Password">
+              <Input
+                type="password"
+                placeholder="••••••••"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="rounded-xl border-border/60"
+              />
+            </Fld>
+            <Fld label="Confirm New Password">
+              <Input
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="rounded-xl border-border/60"
+              />
+            </Fld>
+            <div className="md:col-span-2">
+              <Button type="submit" disabled={isPasswordUpdating} className="rounded-xl gradient-brand">
+                Update Password
+              </Button>
+            </div>
+          </form>
         </div>
 
         {/* Manage Standards */}

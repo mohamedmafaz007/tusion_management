@@ -54,6 +54,7 @@ function FeesPage() {
   const [q, setQ] = useState("");
   const [month, setMonth] = useState(currentMonthKey());
   const [standard, setStandard] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [historyOf, setHistoryOf] = useState<string | null>(null);
   const [receiptOf, setReceiptOf] = useState<{ studentId: string; feeId: string } | null>(null);
 
@@ -80,8 +81,14 @@ function FeesPage() {
             status: "Pending" as const,
           });
         return { student: s, fee };
+      })
+      .filter(({ fee }) => {
+        if (statusFilter === "all") return true;
+        if (statusFilter === "paid") return fee.status === "Paid";
+        if (statusFilter === "unpaid") return fee.status !== "Paid";
+        return true;
       });
-  }, [students, fees, q, month, standard]);
+  }, [students, fees, q, month, standard, statusFilter]);
 
   const totals = useMemo(() => {
     let total = 0;
@@ -196,6 +203,14 @@ function FeesPage() {
           <SelectContent>
             <SelectItem value="all">All Standards</SelectItem>
             {STANDARDS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-10 w-[140px] rounded-xl"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Payments</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+            <SelectItem value="unpaid">Not Paid</SelectItem>
           </SelectContent>
         </Select>
       </div>
